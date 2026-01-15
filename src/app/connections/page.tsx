@@ -79,7 +79,7 @@ export default function ConnectionsPage() {
   };
 
   return (
-    <div className="p-8 max-w-[1000px]">
+    <div className="p-6 md:p-8 max-w-[1000px]">
       {/* Header */}
       <header className="mb-8">
         <h1 className="text-[28px] font-bold text-[#1F2937] mb-2">Platform Connections</h1>

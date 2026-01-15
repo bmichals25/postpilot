@@ -63,7 +63,7 @@ export default function Sidebar() {
   const userInitial = userName.charAt(0).toUpperCase();
 
   return (
-    <nav className="fixed left-0 top-0 bottom-0 w-60 bg-white border-r border-[#F3F4F6] p-6 flex flex-col">
+    <nav className="fixed left-0 top-0 bottom-0 w-60 bg-white border-r border-[#F3F4F6] p-6 flex flex-col z-40">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-2 mb-8">
         <div className="w-9 h-9 gradient-primary rounded-[10px] flex items-center justify-center">

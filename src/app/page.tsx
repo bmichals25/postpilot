@@ -114,7 +114,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="p-8 max-w-[1200px]">
+    <div className="p-6 md:p-8 max-w-[1200px]">
       {/* Header */}
       <header className="flex justify-between items-start mb-8">
         <div>
@@ -149,7 +149,7 @@ export default function Dashboard() {
       </div>
 
       {/* Content Grid */}
-      <div className="grid grid-cols-[1fr_380px] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
         {/* Upcoming Posts */}
         <div className="bg-white rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] overflow-hidden">
           <div className="flex items-center justify-between px-6 py-5 border-b border-[#F3F4F6]">

@@ -22,7 +22,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} antialiased`}>
         <Sidebar />
-        <main className="ml-60 min-h-screen">
+        <main className="ml-60 min-h-screen bg-[#FAFAF9]">
           {children}
         </main>
       </body>

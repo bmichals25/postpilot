@@ -2,8 +2,8 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { Database } from '@/types/database';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://zkuwpgxcudoeblkvrttc.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprdXdwZ3hjdWRvZWJsa3ZydHRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcwNDE0MjQsImV4cCI6MjA4MjYxNzQyNH0.39Q3FlLaB6AES4ZqHgEGa7KLOY7RUr1C_D0uqw_mXeE';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function createSupabaseServerClient() {
   const cookieStore = await cookies();

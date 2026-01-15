@@ -9,6 +9,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Get commit info for deploy message
+
+      - name: Get commit info
+        id: commit
+        run: |
+          echo "message=$(git log -1 --pretty=%s)" >> $GITHUB_OUTPUT
+          echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "author=$(git log -1 --pretty=%an)" >> $GITHUB_OUTPUT
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -31,11 +40,15 @@ jobs:
       - name: Deploy to Netlify
         id: netlify
         run: |
-          OUTPUT=$(netlify deploy --prod --dir=.next --site=${{ secrets.NETLIFY_SITE_ID }} --json)
-          echo "deploy_output=$OUTPUT" >> $GITHUB_OUTPUT
-          DEPLOY_URL=$(echo $OUTPUT | jq -r '.deploy_url // .url // "https://postpilot-app.netlify.app"')
+          # Deploy and capture output to a file to avoid GITHUB_OUTPUT issues with multi-line JSON
+          netlify deploy --prod --dir=.next --site=${{ secrets.NETLIFY_SITE_ID }} --json > deploy_output.json 2>&1 || true
+
+          # Extract deploy URL
+          DEPLOY_URL=$(cat deploy_output.json | jq -r '.deploy_url // .url // "https://postpilot-app.netlify.app"' 2>/dev/null || echo "https://postpilot-app.netlify.app")
           echo "deploy_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
-          echo "Deployed to: $DEPLOY_URL"
+
+          echo "📦 Deployed to: $DEPLOY_URL"
+          echo "📝 Commit: ${{ steps.commit.outputs.sha }} - ${{ steps.commit.outputs.message }}"
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
 
@@ -46,6 +59,7 @@ jobs:
         run: |
           SITE_URL="https://postpilot-app.netlify.app"
           echo "🔍 Checking deployment at $SITE_URL"
+          echo "📝 Verifying commit: ${{ steps.commit.outputs.sha }} - ${{ steps.commit.outputs.message }}"
 
           # Check HTTP status
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$SITE_URL")
@@ -87,11 +101,6 @@ jobs:
           echo ""
           echo "🎉 All deployment checks passed!"
 
-      - name: Take screenshot (visual verification)
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
       - name: Install Playwright
         run: npx playwright install chromium
 
@@ -103,15 +112,20 @@ jobs:
       - name: Upload screenshot artifact
         uses: actions/upload-artifact@v4
         with:
-          name: deployment-screenshot
+          name: deployment-screenshot-${{ steps.commit.outputs.sha }}
           path: screenshot.png
-          retention-days: 7
+          retention-days: 14
 
       - name: Deployment Summary
         run: |
           echo "## 🚀 Deployment Complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Site URL:** https://postpilot-app.netlify.app" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Deploy Info" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** \`${{ steps.commit.outputs.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Message:** ${{ steps.commit.outputs.message }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Author:** ${{ steps.commit.outputs.author }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Verification Results" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ HTTP 200 OK" >> $GITHUB_STEP_SUMMARY

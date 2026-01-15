@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import { useWorkspaces } from '@/hooks/useWorkspaces';
 import {
   LogoIcon,
   HomeIcon,
@@ -14,20 +16,6 @@ import {
   ChevronDownIcon,
   PlusIcon,
 } from '@/components/icons';
-
-interface Workspace {
-  id: string;
-  name: string;
-  initials: string;
-  type: string;
-  color: string;
-}
-
-const workspaces: Workspace[] = [
-  { id: '1', name: 'TechCorp Inc.', initials: 'TC', type: 'Business', color: 'from-emerald-500 to-emerald-600' },
-  { id: '2', name: "Ben's Personal Brand", initials: 'BM', type: 'Personal', color: 'from-indigo-500 to-purple-500' },
-  { id: '3', name: 'Side Project Co.', initials: 'SC', type: 'Startup', color: 'from-amber-500 to-orange-500' },
-];
 
 const mainNavItems = [
   { href: '/', label: 'Dashboard', icon: HomeIcon },
@@ -44,12 +32,35 @@ const settingsNavItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
-  const [currentWorkspace, setCurrentWorkspace] = useState(workspaces[0]);
+
+  // Use auth hook for user data
+  const { user, profile, credits, loading: authLoading } = useAuth();
+
+  // Use workspaces hook for workspace data
+  const {
+    workspaces,
+    currentWorkspace,
+    loading: workspacesLoading,
+    selectWorkspace,
+  } = useWorkspaces(user?.id);
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/';
     return pathname.startsWith(href);
   };
+
+  // Display loading state
+  const isLoading = authLoading || workspacesLoading;
+
+  // Calculate credits display
+  const creditsUsed = credits?.used ?? 153;
+  const creditsTotal = credits?.total ?? 1000;
+  const creditsRemaining = creditsTotal - creditsUsed;
+  const creditsPercentage = ((creditsRemaining / creditsTotal) * 100).toFixed(1);
+
+  // User display info
+  const userName = profile?.name ?? user?.email?.split('@')[0] ?? 'Ben';
+  const userInitial = userName.charAt(0).toUpperCase();
 
   return (
     <nav className="fixed left-0 top-0 bottom-0 w-60 bg-white border-r border-[#F3F4F6] p-6 flex flex-col">
@@ -66,39 +77,50 @@ export default function Sidebar() {
         <button
           onClick={() => setIsWorkspaceOpen(!isWorkspaceOpen)}
           className="w-full px-3 py-2.5 bg-[#F9FAFB] rounded-[10px] hover:bg-[#F3F4F6] transition-colors cursor-pointer"
+          disabled={isLoading}
         >
-          <div className="flex items-center gap-2.5">
-            <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${currentWorkspace.color} flex items-center justify-center text-sm font-semibold text-white`}>
-              {currentWorkspace.initials}
+          {isLoading ? (
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-gray-200 animate-pulse" />
+              <div className="flex-1">
+                <div className="h-4 bg-gray-200 rounded animate-pulse mb-1" />
+                <div className="h-3 w-16 bg-gray-200 rounded animate-pulse" />
+              </div>
             </div>
-            <div className="flex-1 min-w-0 text-left">
-              <div className="text-[13px] font-semibold text-[#1F2937] truncate">{currentWorkspace.name}</div>
-              <div className="text-[11px] text-[#6B7280]">{currentWorkspace.type}</div>
+          ) : currentWorkspace ? (
+            <div className="flex items-center gap-2.5">
+              <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${currentWorkspace.color} flex items-center justify-center text-sm font-semibold text-white`}>
+                {currentWorkspace.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
+              </div>
+              <div className="flex-1 min-w-0 text-left">
+                <div className="text-[13px] font-semibold text-[#1F2937] truncate">{currentWorkspace.name}</div>
+                <div className="text-[11px] text-[#6B7280] capitalize">{currentWorkspace.type}</div>
+              </div>
+              <ChevronDownIcon className={`text-[#9CA3AF] transition-transform ${isWorkspaceOpen ? 'rotate-180' : ''}`} />
             </div>
-            <ChevronDownIcon className={`text-[#9CA3AF] transition-transform ${isWorkspaceOpen ? 'rotate-180' : ''}`} />
-          </div>
+          ) : null}
         </button>
 
         {/* Dropdown */}
-        {isWorkspaceOpen && (
+        {isWorkspaceOpen && !isLoading && (
           <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-[10px] shadow-lg border border-[#E5E7EB] p-2 z-50">
             {workspaces.map((workspace) => (
               <button
                 key={workspace.id}
                 onClick={() => {
-                  setCurrentWorkspace(workspace);
+                  selectWorkspace(workspace);
                   setIsWorkspaceOpen(false);
                 }}
                 className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-colors ${
-                  workspace.id === currentWorkspace.id ? 'bg-[#EEF2FF]' : 'hover:bg-[#F9FAFB]'
+                  workspace.id === currentWorkspace?.id ? 'bg-[#EEF2FF]' : 'hover:bg-[#F9FAFB]'
                 }`}
               >
                 <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${workspace.color} flex items-center justify-center text-xs font-semibold text-white`}>
-                  {workspace.initials}
+                  {workspace.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
                 </div>
                 <div className="flex-1 min-w-0 text-left">
                   <div className="text-[13px] font-semibold text-[#1F2937] truncate">{workspace.name}</div>
-                  <div className="text-[11px] text-[#6B7280]">{workspace.type}</div>
+                  <div className="text-[11px] text-[#6B7280] capitalize">{workspace.type}</div>
                 </div>
               </button>
             ))}
@@ -171,10 +193,10 @@ export default function Sidebar() {
       <div className="p-3 bg-[#F9FAFB] rounded-xl">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 gradient-primary rounded-full flex items-center justify-center text-white font-semibold text-sm">
-            B
+            {userInitial}
           </div>
           <div className="flex-1">
-            <div className="text-sm font-semibold text-[#1F2937]">Ben</div>
+            <div className="text-sm font-semibold text-[#1F2937]">{userName}</div>
             <div className="text-xs text-[#6B7280]">Pro Plan</div>
           </div>
         </div>
@@ -183,12 +205,14 @@ export default function Sidebar() {
         <div className="mt-3 pt-3 border-t border-[#E5E7EB]">
           <div className="flex justify-between items-center mb-2">
             <span className="text-xs text-[#6B7280]">AI Credits</span>
-            <span className="text-xs font-semibold text-[#1F2937] tabular-nums">847 / 1,000</span>
+            <span className="text-xs font-semibold text-[#1F2937] tabular-nums">
+              {creditsRemaining.toLocaleString()} / {creditsTotal.toLocaleString()}
+            </span>
           </div>
           <div className="h-1.5 bg-[#E5E7EB] rounded-full overflow-hidden">
             <div
               className="h-full gradient-primary rounded-full transition-all duration-300"
-              style={{ width: '84.7%' }}
+              style={{ width: `${creditsPercentage}%` }}
             />
           </div>
         </div>

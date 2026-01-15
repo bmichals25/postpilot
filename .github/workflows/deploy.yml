@@ -29,6 +29,93 @@ jobs:
         run: npm install -g netlify-cli
 
       - name: Deploy to Netlify
-        run: netlify deploy --prod --dir=.next --site=${{ secrets.NETLIFY_SITE_ID }}
+        id: netlify
+        run: |
+          OUTPUT=$(netlify deploy --prod --dir=.next --site=${{ secrets.NETLIFY_SITE_ID }} --json)
+          echo "deploy_output=$OUTPUT" >> $GITHUB_OUTPUT
+          DEPLOY_URL=$(echo $OUTPUT | jq -r '.deploy_url // .url // "https://postpilot-app.netlify.app"')
+          echo "deploy_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+          echo "Deployed to: $DEPLOY_URL"
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+
+      - name: Wait for deployment to propagate
+        run: sleep 30
+
+      - name: Verify deployment - Health Check
+        run: |
+          SITE_URL="https://postpilot-app.netlify.app"
+          echo "🔍 Checking deployment at $SITE_URL"
+
+          # Check HTTP status
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$SITE_URL")
+          echo "HTTP Status: $HTTP_STATUS"
+
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "❌ FAILED: Site returned HTTP $HTTP_STATUS"
+            exit 1
+          fi
+          echo "✅ HTTP Status OK"
+
+          # Check that key content is present
+          CONTENT=$(curl -s "$SITE_URL")
+
+          # Check for PostPilot branding
+          if echo "$CONTENT" | grep -q "PostPilot"; then
+            echo "✅ PostPilot branding found"
+          else
+            echo "❌ FAILED: PostPilot branding not found"
+            exit 1
+          fi
+
+          # Check for main navigation elements
+          if echo "$CONTENT" | grep -q "Dashboard"; then
+            echo "✅ Dashboard navigation found"
+          else
+            echo "❌ FAILED: Dashboard navigation not found"
+            exit 1
+          fi
+
+          # Check for CSS file (ensures styles are loading)
+          if echo "$CONTENT" | grep -q "_next/static"; then
+            echo "✅ Static assets referenced"
+          else
+            echo "❌ FAILED: Static assets not found"
+            exit 1
+          fi
+
+          echo ""
+          echo "🎉 All deployment checks passed!"
+
+      - name: Take screenshot (visual verification)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Playwright
+        run: npx playwright install chromium
+
+      - name: Capture screenshot
+        run: |
+          npx playwright screenshot https://postpilot-app.netlify.app screenshot.png --full-page
+          echo "📸 Screenshot captured"
+
+      - name: Upload screenshot artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-screenshot
+          path: screenshot.png
+          retention-days: 7
+
+      - name: Deployment Summary
+        run: |
+          echo "## 🚀 Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Site URL:** https://postpilot-app.netlify.app" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Verification Results" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ HTTP 200 OK" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ PostPilot branding present" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Navigation elements present" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Static assets loading" >> $GITHUB_STEP_SUMMARY
+          echo "- 📸 Screenshot captured (see artifacts)" >> $GITHUB_STEP_SUMMARY

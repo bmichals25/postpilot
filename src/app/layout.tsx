@@ -20,13 +20,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased`}>
-        <div className="flex min-h-screen">
-          <Sidebar />
-          <main className="flex-1 ml-60 bg-[#FAFAF9]">
-            {children}
-          </main>
-        </div>
+      <body className={`${inter.variable} antialiased`}>
+        <Sidebar />
+        <main className="ml-60 min-h-screen bg-[#FAFAF9]">
+          {children}
+        </main>
       </body>
     </html>
   );

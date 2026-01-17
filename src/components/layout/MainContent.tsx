@@ -8,9 +8,11 @@ interface MainContentProps {
 
 export default function MainContent({ children }: MainContentProps) {
   return (
-    <>
+    <div className="main-content-wrapper">
       <WorkspaceBanner />
-      {children}
-    </>
+      <div className="main-content-body">
+        {children}
+      </div>
+    </div>
   );
 }

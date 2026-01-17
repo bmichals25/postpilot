@@ -68,10 +68,6 @@ export default function WorkspaceBanner() {
           <div className="workspace-header-info">
             <h1 className="workspace-header-name">{currentWorkspace.name}</h1>
             <div className="workspace-header-meta">
-              <span className="workspace-header-type">
-                {typeInfo.emoji} {typeInfo.label}
-              </span>
-              <span className="workspace-header-separator">•</span>
               <span className="workspace-header-status">
                 <span className="workspace-header-status-dot" />
                 Active
@@ -80,47 +76,41 @@ export default function WorkspaceBanner() {
           </div>
         </div>
 
-        {/* Social Links */}
-        <div className="workspace-header-socials">
-          <span className="workspace-header-socials-label">Connected Accounts</span>
-          <div className="workspace-header-social-links">
-            {mockSocialConnections.twitter.connected && (
-              <a
-                href={mockSocialConnections.twitter.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="workspace-social-link twitter"
-                title={`Twitter: ${mockSocialConnections.twitter.handle}`}
-              >
-                <TwitterIcon size={18} />
-                <span className="workspace-social-handle">{mockSocialConnections.twitter.handle}</span>
-              </a>
-            )}
-            {mockSocialConnections.linkedin.connected && (
-              <a
-                href={mockSocialConnections.linkedin.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="workspace-social-link linkedin"
-                title={`LinkedIn: ${mockSocialConnections.linkedin.handle}`}
-              >
-                <LinkedInIcon size={18} />
-                <span className="workspace-social-handle">{mockSocialConnections.linkedin.handle}</span>
-              </a>
-            )}
-            {mockSocialConnections.instagram.connected && (
-              <a
-                href={mockSocialConnections.instagram.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="workspace-social-link instagram"
-                title={`Instagram: ${mockSocialConnections.instagram.handle}`}
-              >
-                <InstagramIcon size={18} />
-                <span className="workspace-social-handle">{mockSocialConnections.instagram.handle}</span>
-              </a>
-            )}
-          </div>
+        {/* Social Links - Icons Only */}
+        <div className="workspace-header-social-links">
+          {mockSocialConnections.twitter.connected && (
+            <a
+              href={mockSocialConnections.twitter.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="workspace-social-link"
+              title={`Twitter: ${mockSocialConnections.twitter.handle}`}
+            >
+              <TwitterIcon size={20} />
+            </a>
+          )}
+          {mockSocialConnections.linkedin.connected && (
+            <a
+              href={mockSocialConnections.linkedin.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="workspace-social-link"
+              title={`LinkedIn: ${mockSocialConnections.linkedin.handle}`}
+            >
+              <LinkedInIcon size={20} />
+            </a>
+          )}
+          {mockSocialConnections.instagram.connected && (
+            <a
+              href={mockSocialConnections.instagram.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="workspace-social-link"
+              title={`Instagram: ${mockSocialConnections.instagram.handle}`}
+            >
+              <InstagramIcon size={20} />
+            </a>
+          )}
         </div>
       </div>
     </header>

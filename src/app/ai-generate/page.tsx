@@ -104,7 +104,7 @@ export default function AIGeneratePage() {
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-[1000px]">
+    <div className="max-w-[1000px]">
       {/* Header */}
       <header className="text-center mb-10">
         <div className="w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-[0_8px_24px_rgba(99,102,241,0.3)]">

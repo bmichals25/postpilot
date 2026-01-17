@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import Sidebar from "@/components/layout/Sidebar";
+import Analytics from "@/components/Analytics";
 
 const inter = Inter({
   subsets: ["latin"],

@@ -2818,6 +2818,180 @@ body {
     margin: 0 4px;
 }
 
+/* Header Workspace Switcher */
+.header-workspace-switcher {
+    position: relative;
+}
+
+.header-workspace-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 12px 6px 6px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.header-workspace-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.header-workspace-btn.open {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.header-chevron {
+    color: rgba(255, 255, 255, 0.8);
+    transition: transform 0.2s ease;
+    margin-left: 4px;
+}
+
+.header-workspace-btn.open .header-chevron {
+    transform: rotate(180deg);
+}
+
+/* Header Dropdown */
+.header-dropdown-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 99;
+}
+
+.header-workspace-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    min-width: 280px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    padding: 8px;
+    z-index: 100;
+    animation: dropdownFadeIn 0.15s ease;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.header-dropdown-label {
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #9CA3AF;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.header-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.header-dropdown-item:hover {
+    background: #F3F4F6;
+}
+
+.header-dropdown-item.selected {
+    background: #EEF2FF;
+}
+
+.header-dropdown-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+}
+
+.header-dropdown-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.header-dropdown-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1F2937;
+    display: block;
+}
+
+.header-dropdown-type {
+    font-size: 12px;
+    color: #6B7280;
+    text-transform: capitalize;
+}
+
+.header-dropdown-check {
+    color: #6366F1;
+}
+
+.header-dropdown-divider {
+    height: 1px;
+    background: #E5E7EB;
+    margin: 8px 0;
+}
+
+.header-dropdown-add {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6366F1;
+    transition: all 0.15s ease;
+}
+
+.header-dropdown-add:hover {
+    background: #EEF2FF;
+}
+
+.header-dropdown-add-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #EEF2FF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6366F1;
+}
+
 .glass-header-inner {
     display: flex;
     align-items: center;
@@ -3013,8 +3187,21 @@ body {
 }
 
 /* ==========================================
-   SIDEBAR - Collapsible
+   SIDEBAR - Collapsible with Handle
    ========================================== */
+
+/* Sidebar Wrapper - contains sidebar + handle */
+.sidebar-wrapper {
+    position: relative;
+    display: flex;
+    height: calc(100vh - 71px);
+}
+
+.sidebar-wrapper.collapsed .sidebar {
+    width: 72px;
+    min-width: 72px;
+    padding: 20px 12px;
+}
 
 .sidebar {
     position: relative;
@@ -3022,63 +3209,55 @@ body {
     min-width: 240px;
     background: #FFFFFF;
     border-right: 1px solid #F3F4F6;
-    padding: 16px;
+    padding: 20px 16px;
     display: flex;
     flex-direction: column;
     transition: all 0.25s ease;
     z-index: 40;
-    height: calc(100vh - 71px);
+    height: 100%;
     overflow-y: auto;
 }
 
 .sidebar-collapsed {
     width: 72px;
     min-width: 72px;
-    padding: 16px 12px;
+    padding: 20px 12px;
 }
 
-.sidebar-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-}
-
-.sidebar-collapse-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: transparent;
-    border: none;
-    border-radius: 8px;
-    color: #9CA3AF;
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.sidebar-collapse-btn:hover {
-    background: #F3F4F6;
-    color: #6B7280;
-}
-
-.sidebar-collapsed .sidebar-header {
-    justify-content: center;
-}
-
-.sidebar-collapsed .logo {
-    margin-bottom: 0;
-}
-
-.sidebar-collapsed .sidebar-collapse-btn {
+/* Sidebar Handle - Outside the sidebar */
+.sidebar-handle {
     position: absolute;
-    right: -16px;
-    top: 20px;
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 48px;
     background: white;
     border: 1px solid #E5E7EB;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    z-index: 10;
+    border-radius: 0 8px 8px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #9CA3AF;
+    transition: all 0.2s ease;
+    z-index: 50;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+}
+
+.sidebar-handle:hover {
+    background: #F9FAFB;
+    color: #6B7280;
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.08);
+}
+
+.sidebar-handle:active {
+    background: #F3F4F6;
+}
+
+/* First nav section doesn't need extra top margin */
+.nav-section-first {
+    margin-top: 0;
 }
 
 .sidebar-collapsed .nav-item {

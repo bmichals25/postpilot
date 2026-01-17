@@ -114,7 +114,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="py-8 px-10 max-w-[1200px]">
+    <div>
       {/* Header */}
       <header className="flex justify-between items-start mb-8">
         <div>

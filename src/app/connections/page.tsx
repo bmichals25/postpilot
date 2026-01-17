@@ -52,73 +52,45 @@ const platforms = [
 ];
 
 export default function ConnectionsPage() {
-  const getPlatformIcon = (platformId: string, size = 28) => {
-    switch (platformId) {
-      case 'twitter':
-        return <TwitterIcon size={size} className="text-black" />;
-      case 'linkedin':
-        return <LinkedInIcon size={size} />;
-      case 'instagram':
-        return <InstagramIcon size={size} gradient={false} className="text-white" />;
-      default:
-        return null;
-    }
-  };
-
-  const getPlatformLogoBg = (platformId: string) => {
-    switch (platformId) {
-      case 'twitter':
-        return 'bg-[#F3F4F6]';
-      case 'linkedin':
-        return 'bg-[#EFF6FF]';
-      case 'instagram':
-        return 'bg-gradient-to-br from-[#FFECD2] via-[#FCB69F] via-[#FF8A80] to-[#C13584]';
-      default:
-        return 'bg-gray-100';
-    }
-  };
-
   return (
-    <div className="max-w-[1000px]">
+    <div style={{ maxWidth: '1000px' }}>
       {/* Header */}
-      <header className="mb-8">
-        <h1 className="text-[28px] font-bold text-[#1F2937] mb-2">Platform Connections</h1>
-        <p className="text-[15px] text-[#6B7280]">Manage your connected social media accounts and monitor their health status.</p>
+      <header className="connections-header">
+        <h1>Platform Connections</h1>
+        <p>Manage your connected social media accounts and monitor their health status.</p>
       </header>
 
       {/* Overall Status Banner */}
-      <div className="flex items-center gap-4 px-6 py-5 bg-gradient-to-br from-[#ECFDF5] to-[#D1FAE5] rounded-2xl mb-8">
-        <div className="w-14 h-14 bg-[#10B981] rounded-[14px] flex items-center justify-center shadow-[0_4px_12px_rgba(16,185,129,0.3)]">
+      <div className="status-banner">
+        <div className="status-banner-icon">
           <CheckCircleIcon size={28} className="text-white" />
         </div>
-        <div className="flex-1">
-          <div className="text-lg font-bold text-[#065F46] mb-1">All Systems Operational</div>
-          <div className="text-sm text-[#047857]">Your connected platforms are working perfectly. You&apos;re all set to post!</div>
+        <div className="status-banner-content">
+          <div className="status-banner-title">All Systems Operational</div>
+          <div className="status-banner-subtitle">Your connected platforms are working perfectly. You&apos;re all set to post!</div>
         </div>
-        <div className="flex items-center gap-2 px-5 py-2.5 bg-white rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
-          <div className="w-2.5 h-2.5 bg-[#10B981] rounded-full animate-pulse-soft" />
-          <span className="text-sm font-semibold text-[#047857]">3 platforms connected</span>
+        <div className="status-banner-badge">
+          <div className="status-banner-badge-dot" />
+          <span>3 platforms connected</span>
         </div>
       </div>
 
       {/* Platform Cards */}
-      <div className="flex flex-col gap-5">
+      <div className="platforms-grid">
         {platforms.map((platform) => (
-          <div key={platform.id} className="bg-white rounded-2xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] transition-shadow">
+          <div key={platform.id} className="platform-card">
             {/* Card Header */}
-            <div className="flex items-center gap-4 mb-5">
-              <div className={`w-14 h-14 rounded-[14px] flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${getPlatformLogoBg(platform.id)}`}>
-                {getPlatformIcon(platform.id)}
+            <div className="platform-card-header">
+              <div className={`platform-logo ${platform.id}`}>
+                {platform.id === 'twitter' && <TwitterIcon size={28} className="text-black" />}
+                {platform.id === 'linkedin' && <LinkedInIcon size={28} />}
+                {platform.id === 'instagram' && <InstagramIcon size={28} gradient={false} className="text-white" />}
               </div>
-              <div className="flex-1">
-                <div className="text-lg font-bold text-[#1F2937] mb-0.5">{platform.name}</div>
-                <div className="text-sm text-[#6B7280]">{platform.handle}</div>
+              <div className="platform-info">
+                <div className="platform-card-name">{platform.name}</div>
+                <div className="platform-card-handle">{platform.handle}</div>
               </div>
-              <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${
-                platform.status === 'healthy'
-                  ? 'bg-[#ECFDF5] text-[#047857]'
-                  : 'bg-[#FFFBEB] text-[#D97706]'
-              }`}>
+              <div className={`platform-status-badge ${platform.status}`}>
                 {platform.status === 'healthy' ? (
                   <CheckIcon size={18} />
                 ) : (
@@ -130,71 +102,67 @@ export default function ConnectionsPage() {
 
             {/* Warning Message (for LinkedIn) */}
             {platform.warning && (
-              <div className="flex items-start gap-3 p-4 bg-[#FFFBEB] rounded-xl mb-5">
-                <AlertTriangleIcon size={24} className="text-[#F59E0B] flex-shrink-0" />
-                <div className="flex-1">
-                  <div className="text-sm font-semibold text-[#92400E] mb-1">{platform.warning.title}</div>
-                  <div className="text-[13px] text-[#A16207] leading-relaxed">{platform.warning.message}</div>
+              <div className="warning-message">
+                <AlertTriangleIcon size={24} className="warning-message-icon" />
+                <div className="warning-message-content">
+                  <div className="warning-message-title">{platform.warning.title}</div>
+                  <div className="warning-message-text">{platform.warning.message}</div>
                 </div>
-                <button className="px-4 py-2 bg-[#F59E0B] text-white rounded-lg text-[13px] font-semibold hover:bg-[#D97706] transition-colors flex-shrink-0">
-                  Re-authenticate
-                </button>
+                <button className="warning-message-action">Re-authenticate</button>
               </div>
             )}
 
             {/* Health Details */}
-            <div className="grid grid-cols-3 gap-4 pt-5 border-t border-[#F3F4F6]">
-              <div className="flex items-center gap-3 px-4 py-3 bg-[#F9FAFB] rounded-[10px]">
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                  platform.auth === 'Valid' ? 'bg-[#ECFDF5] text-[#10B981]' : 'bg-[#FFFBEB] text-[#F59E0B]'
-                }`}>
+            <div className="health-details">
+              <div className="health-item">
+                <div className={`health-item-icon ${platform.auth === 'Valid' ? 'green' : 'yellow'}`}>
                   <ShieldIcon size={18} />
                 </div>
-                <div>
-                  <div className="text-xs text-[#6B7280] mb-0.5">Authentication</div>
-                  <div className="text-sm font-semibold text-[#1F2937]">{platform.auth}</div>
+                <div className="health-item-content">
+                  <div className="health-item-label">Authentication</div>
+                  <div className="health-item-value">{platform.auth}</div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 px-4 py-3 bg-[#F9FAFB] rounded-[10px]">
-                <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-[#EEF2FF] text-[#6366F1]">
+              <div className="health-item">
+                <div className="health-item-icon blue">
                   <ClockIcon size={18} />
                 </div>
-                <div>
-                  <div className="text-xs text-[#6B7280] mb-0.5">Last Activity</div>
-                  <div className="text-sm font-semibold text-[#1F2937]">{platform.lastActivity}</div>
+                <div className="health-item-content">
+                  <div className="health-item-label">Last Activity</div>
+                  <div className="health-item-value">{platform.lastActivity}</div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 px-4 py-3 bg-[#F9FAFB] rounded-[10px]">
-                <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-[#ECFDF5] text-[#10B981]">
+              <div className="health-item">
+                <div className="health-item-icon green">
                   <LightningIcon size={18} />
                 </div>
-                <div>
-                  <div className="text-xs text-[#6B7280] mb-0.5">API Status</div>
-                  <div className="text-sm font-semibold text-[#1F2937]">{platform.apiStatus}</div>
+                <div className="health-item-content">
+                  <div className="health-item-label">API Status</div>
+                  <div className="health-item-value">{platform.apiStatus}</div>
                 </div>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-2.5 mt-5 pt-5 border-t border-[#F3F4F6]">
+            <div className="platform-actions">
               {platform.status === 'warning' ? (
-                <button className="flex items-center gap-2 px-4 py-2.5 bg-[#6366F1] text-white rounded-[10px] text-sm font-medium hover:bg-[#5558E3] transition-colors">
+                <button className="platform-action-btn primary">
                   <RefreshIcon size={16} />
                   Re-authenticate Now
                 </button>
               ) : (
-                <button className="flex items-center gap-2 px-4 py-2.5 bg-[#F9FAFB] rounded-[10px] text-sm font-medium text-[#374151] hover:bg-[#F3F4F6] transition-colors">
+                <button className="platform-action-btn">
                   <RefreshIcon size={16} />
                   Refresh Connection
                 </button>
               )}
-              <button className="flex items-center gap-2 px-4 py-2.5 bg-[#F9FAFB] rounded-[10px] text-sm font-medium text-[#374151] hover:bg-[#F3F4F6] transition-colors">
+              <button className="platform-action-btn">
                 <SettingsIcon size={16} />
                 Configure
               </button>
-              <button className="flex items-center gap-2 px-4 py-2.5 bg-[#F9FAFB] rounded-[10px] text-sm font-medium text-[#DC2626] hover:bg-[#FEF2F2] transition-colors">
+              <button className="platform-action-btn danger">
                 <LogoutIcon size={16} />
                 Disconnect
               </button>
@@ -203,13 +171,13 @@ export default function ConnectionsPage() {
         ))}
 
         {/* Add New Platform Card */}
-        <div className="flex flex-col items-center justify-center gap-4 py-12 px-6 bg-white border-2 border-dashed border-[#E5E7EB] rounded-2xl cursor-pointer hover:border-[#6366F1] hover:bg-[#FAFAFF] transition-all">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#EEF2FF] to-[#F5F3FF] rounded-2xl flex items-center justify-center">
-            <PlusIcon size={28} className="text-[#6366F1]" />
+        <div className="add-platform-card">
+          <div className="add-platform-icon">
+            <PlusIcon size={28} />
           </div>
-          <div className="text-center">
-            <div className="text-base font-semibold text-[#1F2937] mb-1">Connect Another Platform</div>
-            <div className="text-sm text-[#6B7280]">Add more social accounts to expand your reach</div>
+          <div className="add-platform-text">
+            <div className="add-platform-title">Connect Another Platform</div>
+            <div className="add-platform-subtitle">Add more social accounts to expand your reach</div>
           </div>
         </div>
       </div>

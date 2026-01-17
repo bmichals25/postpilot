@@ -9,7 +9,6 @@ import {
   InstagramIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  PlayIcon,
 } from '@/components/icons';
 
 // Sample calendar data
@@ -104,64 +103,30 @@ export default function SchedulePage() {
     }
   };
 
-  const getPlatformIcon = (platform: string, size = 12) => {
-    switch (platform) {
-      case 'twitter':
-        return <TwitterIcon size={size} className="text-black" />;
-      case 'linkedin':
-        return <LinkedInIcon size={size} />;
-      case 'instagram':
-        return <InstagramIcon size={size} />;
-      default:
-        return null;
-    }
-  };
-
-  const getPlatformBg = (platform: string) => {
-    switch (platform) {
-      case 'twitter':
-        return 'bg-[#F3F4F6]';
-      case 'linkedin':
-        return 'bg-[#EFF6FF]';
-      case 'instagram':
-        return 'bg-[#FDF2F8]';
-      default:
-        return 'bg-gray-100';
-    }
-  };
-
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-[#1F2937]">Schedule</h1>
-        <div className="flex items-center gap-3">
+      <div className="page-header">
+        <h1 className="page-title">Schedule</h1>
+        <div className="header-actions">
           {/* View Toggle */}
-          <div className="flex bg-[#F3F4F6] rounded-lg p-1">
+          <div className="view-toggle">
             <button
               onClick={() => setActiveView('week')}
-              className={`px-4 py-2 text-[13px] font-medium rounded-md transition-all ${
-                activeView === 'week'
-                  ? 'bg-white text-[#1F2937] shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
-                  : 'text-[#6B7280]'
-              }`}
+              className={`view-btn ${activeView === 'week' ? 'active' : ''}`}
             >
               Week
             </button>
             <button
               onClick={() => setActiveView('month')}
-              className={`px-4 py-2 text-[13px] font-medium rounded-md transition-all ${
-                activeView === 'month'
-                  ? 'bg-white text-[#1F2937] shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
-                  : 'text-[#6B7280]'
-              }`}
+              className={`view-btn ${activeView === 'month' ? 'active' : ''}`}
             >
               Month
             </button>
           </div>
 
           {/* Create Post Button */}
-          <button className="flex items-center gap-2 px-5 py-2.5 gradient-primary text-white rounded-[10px] text-sm font-semibold hover:translate-y-[-1px] hover:shadow-lg transition-all shadow-[0_4px_12px_rgba(99,102,241,0.3)]">
+          <button className="create-btn">
             <PlusIcon size={18} />
             Create Post
           </button>
@@ -169,65 +134,55 @@ export default function SchedulePage() {
       </div>
 
       {/* Calendar Navigation */}
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-4">
+      <div className="calendar-nav">
+        <div className="calendar-nav-left">
           {/* Nav Arrows */}
-          <div className="flex gap-1">
-            <button className="w-9 h-9 border border-[#E5E7EB] bg-white rounded-lg flex items-center justify-center hover:bg-[#F9FAFB] hover:border-[#D1D5DB] transition-all">
-              <ChevronLeftIcon size={18} className="text-[#6B7280]" />
+          <div className="nav-arrows">
+            <button className="nav-arrow">
+              <ChevronLeftIcon size={18} />
             </button>
-            <button className="w-9 h-9 border border-[#E5E7EB] bg-white rounded-lg flex items-center justify-center hover:bg-[#F9FAFB] hover:border-[#D1D5DB] transition-all">
-              <ChevronRightIcon size={18} className="text-[#6B7280]" />
+            <button className="nav-arrow">
+              <ChevronRightIcon size={18} />
             </button>
           </div>
 
           {/* Today Button */}
-          <button className="px-4 py-2 border border-[#E5E7EB] bg-white rounded-lg text-[13px] font-medium text-[#374151] hover:bg-[#F9FAFB] hover:border-[#D1D5DB] transition-all">
-            Today
-          </button>
+          <button className="today-btn">Today</button>
 
           {/* Current Range */}
-          <span className="text-lg font-semibold text-[#1F2937]">January 13 - 19, 2026</span>
+          <span className="current-range">January 13 - 19, 2026</span>
         </div>
 
         {/* Platform Filters */}
-        <div className="flex gap-2">
+        <div className="platform-filters">
           {['twitter', 'linkedin', 'instagram'].map((platform) => (
             <button
               key={platform}
               onClick={() => togglePlatform(platform)}
-              className={`w-9 h-9 border rounded-lg flex items-center justify-center transition-all ${
-                activePlatforms.includes(platform)
-                  ? 'border-[#6366F1] bg-[#EEF2FF] opacity-100'
-                  : 'border-[#E5E7EB] bg-white opacity-50 hover:opacity-100'
-              }`}
+              className={`platform-filter ${activePlatforms.includes(platform) ? 'active' : ''}`}
             >
-              {getPlatformIcon(platform, 18)}
+              {platform === 'twitter' && <TwitterIcon size={18} className="text-black" />}
+              {platform === 'linkedin' && <LinkedInIcon size={18} />}
+              {platform === 'instagram' && <InstagramIcon size={18} />}
             </button>
           ))}
         </div>
       </div>
 
       {/* Calendar Grid */}
-      <div className="bg-white rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] overflow-hidden">
+      <div className="calendar-container">
         {/* Calendar Header */}
-        <div className="grid grid-cols-7 border-b border-[#F3F4F6]">
+        <div className="calendar-header">
           {weekDays.map((day) => (
-            <div key={day.day} className="p-4 text-center border-r border-[#F3F4F6] last:border-r-0">
-              <div className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide">{day.day}</div>
-              <div className={`text-2xl font-semibold mt-1 ${
-                day.isToday
-                  ? 'w-10 h-10 gradient-primary text-white rounded-full inline-flex items-center justify-center'
-                  : 'text-[#1F2937]'
-              }`}>
-                {day.date}
-              </div>
+            <div key={day.day} className={`calendar-header-cell ${day.isToday ? 'today' : ''}`}>
+              <div className="day-name">{day.day}</div>
+              <div className="day-number">{day.date}</div>
             </div>
           ))}
         </div>
 
         {/* Calendar Body */}
-        <div className="grid grid-cols-7" style={{ minHeight: '500px' }}>
+        <div className="calendar-body">
           {weekDays.map((day) => {
             const posts = calendarPosts[day.date] || [];
             const filteredPosts = posts.filter((post) =>
@@ -237,56 +192,41 @@ export default function SchedulePage() {
             return (
               <div
                 key={day.day}
-                className={`border-r border-[#F3F4F6] last:border-r-0 p-2 flex flex-col gap-2 ${
-                  day.isToday ? 'bg-[#FAFAFA]' : ''
-                }`}
-                style={{ minHeight: '500px' }}
+                className={`calendar-day ${day.isToday ? 'today' : ''}`}
               >
                 {filteredPosts.map((post) => (
                   <div
                     key={post.id}
-                    className={`p-2.5 rounded-lg cursor-pointer transition-all hover:bg-[#F3F4F6] hover:translate-y-[-1px] ${
-                      post.isDraft ? 'bg-[#F9FAFB] border-l-[3px] border-l-[#F59E0B]' : 'bg-[#F9FAFB]'
-                    }`}
+                    className={`post-card ${post.isDraft ? 'draft' : ''}`}
                   >
                     {/* Time */}
-                    <div className="text-[11px] font-semibold text-[#6B7280] mb-1.5">{post.time}</div>
+                    <div className="post-time">{post.time}</div>
 
                     {/* Content */}
-                    <div className="flex gap-2">
+                    <div className="post-content">
                       {/* Media */}
                       {post.media && (
-                        <div className="relative w-12 h-12 rounded-md overflow-hidden flex-shrink-0">
+                        <div className={`post-media ${post.media.type === 'video' ? 'video' : ''}`}>
                           <Image
                             src={post.media.url}
                             alt=""
                             fill
                             className="object-cover"
                           />
-                          {post.media.type === 'video' && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="w-5 h-5 bg-black/60 rounded-full flex items-center justify-center">
-                                <PlayIcon size={8} className="text-white ml-0.5" />
-                              </div>
-                            </div>
-                          )}
                         </div>
                       )}
 
                       {/* Text */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-[#374151] leading-relaxed line-clamp-2">{post.content}</p>
-                      </div>
+                      <div className="post-text">{post.content}</div>
                     </div>
 
                     {/* Platforms */}
-                    <div className="flex gap-1 mt-2">
+                    <div className="post-platforms">
                       {post.platforms.map((platform) => (
-                        <div
-                          key={platform}
-                          className={`w-5 h-5 rounded flex items-center justify-center ${getPlatformBg(platform)}`}
-                        >
-                          {getPlatformIcon(platform)}
+                        <div key={platform} className={`post-platform ${platform}`}>
+                          {platform === 'twitter' && <TwitterIcon size={12} className="text-black" />}
+                          {platform === 'linkedin' && <LinkedInIcon size={12} />}
+                          {platform === 'instagram' && <InstagramIcon size={12} />}
                         </div>
                       ))}
                     </div>
@@ -294,7 +234,7 @@ export default function SchedulePage() {
                 ))}
 
                 {/* Add Post Slot */}
-                <button className="flex items-center justify-center gap-1.5 p-2 border border-dashed border-[#D1D5DB] rounded-lg text-[#9CA3AF] text-xs hover:border-[#6366F1] hover:text-[#6366F1] hover:bg-[#EEF2FF] transition-all mt-auto">
+                <button className="add-post-slot">
                   <PlusIcon size={14} />
                   Add post
                 </button>

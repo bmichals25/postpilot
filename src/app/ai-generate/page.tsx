@@ -64,19 +64,6 @@ export default function AIGeneratePage() {
     }
   };
 
-  const getPlatformIcon = (platform: string, size = 24) => {
-    switch (platform) {
-      case 'twitter':
-        return <TwitterIcon size={size} className="text-black" />;
-      case 'linkedin':
-        return <LinkedInIcon size={size} />;
-      case 'instagram':
-        return <InstagramIcon size={size} gradient={false} className="text-white" />;
-      default:
-        return null;
-    }
-  };
-
   const getPlatformName = (platform: string) => {
     switch (platform) {
       case 'twitter':
@@ -104,146 +91,133 @@ export default function AIGeneratePage() {
   };
 
   return (
-    <div className="max-w-[1000px]">
+    <div style={{ maxWidth: '1000px' }}>
       {/* Header */}
-      <header className="text-center mb-10">
-        <div className="w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-[0_8px_24px_rgba(99,102,241,0.3)]">
+      <header className="ai-header">
+        <div className="ai-header-icon">
           <LightningIcon size={32} className="text-white" />
         </div>
-        <h1 className="text-[28px] font-bold text-[#1F2937] mb-2">Let&apos;s create something great!</h1>
-        <p className="text-base text-[#6B7280]">AI-powered content that sounds like you. Just pick your platforms and topic.</p>
+        <h1>Let&apos;s create something great!</h1>
+        <p>AI-powered content that sounds like you. Just pick your platforms and topic.</p>
 
         {/* Credits Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#F5F3FF] rounded-full mt-4">
-          <LightningIcon size={16} className="text-[#8B5CF6]" />
-          <span className="text-sm font-medium text-[#7C3AED]">65 credits remaining</span>
+        <div className="credits-badge">
+          <LightningIcon size={16} />
+          <span>65 credits remaining</span>
         </div>
       </header>
 
       {/* Generator Card */}
-      <div className="bg-white rounded-2xl p-8 shadow-[0_4px_20px_rgba(0,0,0,0.05)] mb-6">
+      <div className="generator-card">
         {/* Platform Selection */}
-        <div className="mb-7">
-          <label className="text-sm font-semibold text-[#1F2937] mb-3 block">Where do you want to post?</label>
-          <div className="flex gap-3">
-            {[
-              { id: 'twitter', bgClass: 'bg-[#F3F4F6]' },
-              { id: 'linkedin', bgClass: 'bg-[#EFF6FF]' },
-              { id: 'instagram', bgClass: 'bg-gradient-to-br from-[#FFECD2] via-[#FCB69F] to-[#FF8A80]' },
-            ].map((platform) => (
-              <button
-                key={platform.id}
-                onClick={() => togglePlatform(platform.id)}
-                className={`flex-1 flex flex-col items-center gap-2.5 py-5 px-4 rounded-xl border-2 transition-all ${
-                  selectedPlatforms.includes(platform.id)
-                    ? 'bg-[#EEF2FF] border-[#6366F1]'
-                    : 'bg-[#F9FAFB] border-transparent hover:bg-[#F3F4F6]'
-                }`}
-              >
-                <div className="relative">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.08)] ${platform.bgClass}`}>
-                    {getPlatformIcon(platform.id)}
+        <div className="section-label">Where do you want to post?</div>
+        <div className="platform-grid">
+          {[
+            { id: 'twitter', bgClass: 'twitter' },
+            { id: 'linkedin', bgClass: 'linkedin' },
+            { id: 'instagram', bgClass: 'instagram' },
+          ].map((platform) => (
+            <button
+              key={platform.id}
+              onClick={() => togglePlatform(platform.id)}
+              className={`platform-option ${selectedPlatforms.includes(platform.id) ? 'selected' : ''}`}
+            >
+              <div className={`platform-icon-wrapper ${platform.bgClass}`}>
+                {platform.id === 'twitter' && <TwitterIcon size={24} className="text-black" />}
+                {platform.id === 'linkedin' && <LinkedInIcon size={24} />}
+                {platform.id === 'instagram' && <InstagramIcon size={24} gradient={false} className="text-white" />}
+                {selectedPlatforms.includes(platform.id) && (
+                  <div className="platform-check">
+                    <CheckIcon size={12} className="text-white" />
                   </div>
-                  {selectedPlatforms.includes(platform.id) && (
-                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#10B981] rounded-full flex items-center justify-center">
-                      <CheckIcon size={12} className="text-white" />
-                    </div>
-                  )}
-                </div>
-                <span className="text-sm font-medium text-[#374151]">{getPlatformName(platform.id)}</span>
-                <span className="text-xs text-[#9CA3AF]">{getPlatformHandle(platform.id)}</span>
-              </button>
-            ))}
-          </div>
+                )}
+              </div>
+              <span className="platform-name">{getPlatformName(platform.id)}</span>
+              <span className="platform-handle">{getPlatformHandle(platform.id)}</span>
+            </button>
+          ))}
         </div>
 
         {/* Topic Input */}
-        <div className="mb-6">
-          <label className="text-sm font-semibold text-[#1F2937] mb-3 block">What would you like to post about?</label>
-          <div className="relative">
+        <div className="input-group">
+          <div className="section-label">What would you like to post about?</div>
+          <div className="input-wrapper">
             <input
               type="text"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               placeholder="e.g., Tips for staying productive while working remotely"
-              className="w-full px-5 py-4 pr-12 text-base border-2 border-[#E5E7EB] rounded-xl outline-none focus:border-[#6366F1] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.1)] transition-all placeholder:text-[#9CA3AF]"
+              className="topic-input"
             />
-            <EditIcon size={24} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+            <EditIcon size={24} className="input-icon" />
           </div>
         </div>
 
         {/* Tone Selection */}
-        <div className="mb-7">
-          <label className="text-sm font-semibold text-[#1F2937] mb-3 block">Pick a tone</label>
-          <div className="flex flex-wrap gap-2.5">
-            {toneOptions.map((tone) => (
-              <button
-                key={tone}
-                onClick={() => setSelectedTone(tone)}
-                className={`px-5 py-2.5 rounded-full text-sm font-medium border-2 transition-all ${
-                  selectedTone === tone
-                    ? 'bg-[#EEF2FF] border-[#6366F1] text-[#6366F1]'
-                    : 'bg-[#F9FAFB] border-transparent text-[#374151] hover:bg-[#F3F4F6]'
-                }`}
-              >
-                {tone}
-              </button>
-            ))}
-          </div>
+        <div className="section-label">Pick a tone</div>
+        <div className="tone-grid">
+          {toneOptions.map((tone) => (
+            <button
+              key={tone}
+              onClick={() => setSelectedTone(tone)}
+              className={`tone-chip ${selectedTone === tone ? 'selected' : ''}`}
+            >
+              {tone}
+            </button>
+          ))}
         </div>
 
         {/* Generate Button */}
-        <button className="w-full flex items-center justify-center gap-2.5 py-4 px-8 gradient-primary text-white rounded-xl text-base font-semibold hover:translate-y-[-2px] hover:shadow-[0_8px_24px_rgba(99,102,241,0.4)] transition-all shadow-[0_4px_16px_rgba(99,102,241,0.3)]">
+        <button className="generate-btn">
           <SparklesIcon size={20} className="animate-sparkle" />
           Generate Posts (1 credit)
         </button>
       </div>
 
       {/* Preview Section */}
-      <div className="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.05)]">
+      <div className="preview-section">
         {/* Preview Header */}
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-2.5">
-            <h3 className="text-base font-semibold text-[#1F2937]">Generated Content</h3>
-            <span className="px-2.5 py-1 bg-[#ECFDF5] rounded-xl text-xs font-medium text-[#10B981]">2 posts ready</span>
+        <div className="preview-header">
+          <div className="preview-title">
+            <h3>Generated Content</h3>
+            <span className="preview-badge">2 posts ready</span>
           </div>
-          <button className="flex items-center gap-1.5 px-3.5 py-2 bg-[#F9FAFB] rounded-lg text-[13px] font-medium text-[#374151] hover:bg-[#F3F4F6] transition-colors">
+          <button className="preview-action-btn">
             <RefreshIcon size={16} />
             Regenerate All
           </button>
         </div>
 
         {/* Generated Posts */}
-        <div className="flex flex-col gap-4">
+        <div className="generated-posts">
           {generatedPosts.map((post) => (
-            <div key={post.id} className="p-5 bg-[#F9FAFB] rounded-xl hover:bg-[#F3F4F6] transition-colors">
+            <div key={post.id} className="generated-post">
               {/* Platform Row */}
-              <div className="flex items-center gap-2.5 mb-3">
-                <div className={`w-7 h-7 rounded-md flex items-center justify-center ${
-                  post.platform === 'twitter' ? 'bg-[#E5E7EB]' : 'bg-[#DBEAFE]'
-                }`}>
-                  {getPlatformIcon(post.platform, 16)}
+              <div className="post-platform-row">
+                <div className={`post-platform-icon ${post.platform}`}>
+                  {post.platform === 'twitter' && <TwitterIcon size={16} className="text-black" />}
+                  {post.platform === 'linkedin' && <LinkedInIcon size={16} />}
                 </div>
-                <span className="text-[13px] font-semibold text-[#374151]">{getPlatformName(post.platform)}</span>
-                <span className="ml-auto text-xs text-[#9CA3AF]">{post.charCount} / {post.maxChars} characters</span>
+                <span className="post-platform-name">{getPlatformName(post.platform)}</span>
+                <span className="post-char-count">{post.charCount} / {post.maxChars} characters</span>
               </div>
 
               {/* Content */}
-              <div className="text-[15px] leading-relaxed text-[#1F2937] mb-4 whitespace-pre-line">
+              <div className="post-content-text">
                 {post.content}
               </div>
 
               {/* Actions */}
-              <div className="flex gap-2">
-                <button className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-[#E5E7EB] rounded-lg text-[13px] font-medium text-[#374151] hover:bg-[#F9FAFB] hover:border-[#D1D5DB] transition-all">
+              <div className="post-actions">
+                <button className="post-action-btn">
                   <EditIcon size={14} />
                   Edit
                 </button>
-                <button className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-[#E5E7EB] rounded-lg text-[13px] font-medium text-[#374151] hover:bg-[#F9FAFB] hover:border-[#D1D5DB] transition-all">
+                <button className="post-action-btn">
                   <RefreshIcon size={14} />
                   Regenerate
                 </button>
-                <button className="flex items-center gap-1.5 px-3.5 py-2 bg-[#6366F1] border border-[#6366F1] rounded-lg text-[13px] font-medium text-white hover:bg-[#5558E3] transition-all">
+                <button className="post-action-btn primary">
                   <CalendarIcon size={14} />
                   Schedule
                 </button>

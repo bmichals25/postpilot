@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/layout/Sidebar";
+import MainContent from "@/components/layout/MainContent";
 import Analytics from "@/components/Analytics";
 
 const inter = Inter({
@@ -61,7 +62,7 @@ export default function RootLayout({
       <body className={`${inter.variable} antialiased`}>
         <Sidebar />
         <main className="main-content">
-          {children}
+          <MainContent>{children}</MainContent>
         </main>
         <Analytics />
       </body>

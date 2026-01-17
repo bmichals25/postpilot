@@ -2765,3 +2765,212 @@ body {
         display: none;
     }
 }
+
+/* ==========================================
+   WORKSPACE BANNER
+   ========================================== */
+
+.workspace-banner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 28px;
+    border-radius: 16px;
+    margin-bottom: 28px;
+    overflow: hidden;
+    min-height: 88px;
+}
+
+.workspace-banner-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+        radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 60% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 30%);
+    pointer-events: none;
+}
+
+.workspace-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    position: relative;
+    z-index: 1;
+}
+
+.workspace-banner-avatar {
+    width: 56px;
+    height: 56px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.workspace-banner-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.workspace-banner-name {
+    font-size: 22px;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    margin: 0;
+}
+
+.workspace-banner-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.workspace-banner-type {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.workspace-banner-separator {
+    opacity: 0.5;
+}
+
+.workspace-banner-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.workspace-banner-status-dot {
+    width: 8px;
+    height: 8px;
+    background: #4ADE80;
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
+    animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
+    }
+    50% {
+        opacity: 0.7;
+        box-shadow: 0 0 12px rgba(74, 222, 128, 0.8);
+    }
+}
+
+.workspace-banner-actions {
+    position: relative;
+    z-index: 1;
+}
+
+.workspace-banner-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.workspace-banner-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+.workspace-banner-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Loading state */
+.workspace-banner-loading {
+    background: linear-gradient(135deg, #E5E7EB, #D1D5DB);
+}
+
+.workspace-banner-avatar-skeleton {
+    width: 56px;
+    height: 56px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 14px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.workspace-banner-text-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.skeleton-line {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-title {
+    width: 180px;
+    height: 24px;
+}
+
+.skeleton-subtitle {
+    width: 120px;
+    height: 16px;
+}
+
+@keyframes skeleton-pulse {
+    0%, 100% {
+        opacity: 0.6;
+    }
+    50% {
+        opacity: 0.3;
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .workspace-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 20px;
+    }
+
+    .workspace-banner-name {
+        font-size: 18px;
+    }
+
+    .workspace-banner-actions {
+        width: 100%;
+    }
+
+    .workspace-banner-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

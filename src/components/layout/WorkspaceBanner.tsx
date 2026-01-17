@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/hooks/useAuth';
 import { useWorkspaces } from '@/hooks/useWorkspaces';
-import { TwitterIcon, LinkedInIcon, InstagramIcon } from '@/components/icons';
+import { LogoIcon, TwitterIcon, LinkedInIcon, InstagramIcon } from '@/components/icons';
 
 // Map Tailwind gradient classes to actual CSS gradients
 const gradientMap: Record<string, { from: string; to: string }> = {
@@ -48,14 +48,22 @@ export default function WorkspaceBanner() {
   const initials = currentWorkspace.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
   return (
-    <header className="glass-header">
+    <header
+      className="glass-header branded"
+      style={{ background: `linear-gradient(135deg, ${colors.from}, ${colors.to})` }}
+    >
       <div className="glass-header-inner">
-        {/* Left side - Company info */}
+        {/* Left side - PostPilot logo + Company info */}
         <div className="glass-header-left">
-          <div
-            className="glass-avatar"
-            style={{ background: `linear-gradient(135deg, ${colors.from}, ${colors.to})` }}
-          >
+          {/* PostPilot Logo */}
+          <div className="header-app-logo">
+            <LogoIcon size={20} />
+          </div>
+
+          <div className="header-divider" />
+
+          {/* Company Avatar & Info */}
+          <div className="glass-avatar branded">
             {initials}
           </div>
           <div className="glass-header-info">
@@ -74,7 +82,7 @@ export default function WorkspaceBanner() {
               href={mockSocialConnections.twitter.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="glass-social-btn"
+              className="glass-social-btn branded"
               title={`Twitter: ${mockSocialConnections.twitter.handle}`}
             >
               <TwitterIcon size={20} />
@@ -85,7 +93,7 @@ export default function WorkspaceBanner() {
               href={mockSocialConnections.linkedin.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="glass-social-btn"
+              className="glass-social-btn branded"
               title={`LinkedIn: ${mockSocialConnections.linkedin.handle}`}
             >
               <LinkedInIcon size={20} />
@@ -96,7 +104,7 @@ export default function WorkspaceBanner() {
               href={mockSocialConnections.instagram.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="glass-social-btn"
+              className="glass-social-btn branded"
               title={`Instagram: ${mockSocialConnections.instagram.handle}`}
             >
               <InstagramIcon size={20} />

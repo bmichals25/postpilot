@@ -15,6 +15,7 @@ import {
   XIcon,
   PlayIcon,
 } from '@/components/icons';
+import NewPostModal from '@/components/modals/NewPostModal';
 
 // Sample posts data
 const upcomingPosts = [
@@ -86,6 +87,7 @@ interface MediaType {
 
 export default function Dashboard() {
   const [selectedMedia, setSelectedMedia] = useState<MediaType | null>(null);
+  const [isNewPostOpen, setIsNewPostOpen] = useState(false);
 
   const getPlatformIcon = (platform: string) => {
     switch (platform) {
@@ -108,7 +110,7 @@ export default function Dashboard() {
           <h1>Good afternoon, Ben!</h1>
           <p>You have 3 posts scheduled for this week. Keep up the great work!</p>
         </div>
-        <button className="create-btn">
+        <button className="create-btn" onClick={() => setIsNewPostOpen(true)}>
           <PlusIcon size={20} />
           Create Post
         </button>
@@ -296,6 +298,17 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* New Post Modal */}
+      <NewPostModal
+        isOpen={isNewPostOpen}
+        onClose={() => setIsNewPostOpen(false)}
+        onSubmit={(post) => {
+          console.log('New post submitted:', post);
+          // In production, this would call an API to create/schedule the post
+          setIsNewPostOpen(false);
+        }}
+      />
     </>
   );
 }

@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useWorkspaces } from '@/hooks/useWorkspaces';
 import {
-  LogoIcon,
   HomeIcon,
   LightningIcon,
   CalendarIcon,
@@ -16,6 +15,7 @@ import {
   ChevronDownIcon,
   PlusIcon,
 } from '@/components/icons';
+import AddBusinessModal from '@/components/modals/AddBusinessModal';
 
 const mainNavItems = [
   { href: '/', label: 'Dashboard', icon: HomeIcon },
@@ -49,6 +49,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isAddBusinessOpen, setIsAddBusinessOpen] = useState(false);
 
   // Use auth hook for user data
   const { user, profile, credits, loading: authLoading } = useAuth();
@@ -81,14 +82,8 @@ export default function Sidebar() {
 
   return (
     <nav className={`sidebar ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
-      {/* Logo & Collapse Toggle */}
+      {/* Collapse Toggle */}
       <div className="sidebar-header">
-        <div className="logo">
-          <div className="logo-icon">
-            <LogoIcon size={20} />
-          </div>
-          {!isCollapsed && <span className="logo-text">PostPilot</span>}
-        </div>
         <button
           className="sidebar-collapse-btn"
           onClick={() => setIsCollapsed(!isCollapsed)}
@@ -148,7 +143,13 @@ export default function Sidebar() {
                   </div>
                 </button>
               ))}
-              <button className="workspace-add">
+              <button
+                className="workspace-add"
+                onClick={() => {
+                  setIsWorkspaceOpen(false);
+                  setIsAddBusinessOpen(true);
+                }}
+              >
                 <div className="workspace-add-icon">
                   <PlusIcon size={14} />
                 </div>
@@ -234,6 +235,17 @@ export default function Sidebar() {
           </div>
         )}
       </div>
+
+      {/* Add Business Modal */}
+      <AddBusinessModal
+        isOpen={isAddBusinessOpen}
+        onClose={() => setIsAddBusinessOpen(false)}
+        onComplete={(business) => {
+          console.log('New business added:', business);
+          // In production, this would call an API to create the workspace
+          setIsAddBusinessOpen(false);
+        }}
+      />
     </nav>
   );
 }

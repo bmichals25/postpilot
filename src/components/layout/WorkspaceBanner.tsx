@@ -5,26 +5,17 @@ import { useWorkspaces } from '@/hooks/useWorkspaces';
 import { TwitterIcon, LinkedInIcon, InstagramIcon } from '@/components/icons';
 
 // Map Tailwind gradient classes to actual CSS gradients
-const gradientMap: Record<string, string> = {
-  'from-emerald-500 to-emerald-600': 'linear-gradient(135deg, #10B981, #059669)',
-  'from-green-500 to-green-600': 'linear-gradient(135deg, #22C55E, #16A34A)',
-  'from-indigo-500 to-purple-500': 'linear-gradient(135deg, #6366F1, #8B5CF6)',
-  'from-amber-500 to-orange-500': 'linear-gradient(135deg, #F59E0B, #F97316)',
-  'from-blue-500 to-blue-600': 'linear-gradient(135deg, #3B82F6, #2563EB)',
-  'from-rose-500 to-pink-500': 'linear-gradient(135deg, #F43F5E, #EC4899)',
-  'from-cyan-500 to-teal-500': 'linear-gradient(135deg, #06B6D4, #14B8A6)',
+const gradientMap: Record<string, { from: string; to: string }> = {
+  'from-emerald-500 to-emerald-600': { from: '#10B981', to: '#059669' },
+  'from-green-500 to-green-600': { from: '#22C55E', to: '#16A34A' },
+  'from-indigo-500 to-purple-500': { from: '#6366F1', to: '#8B5CF6' },
+  'from-amber-500 to-orange-500': { from: '#F59E0B', to: '#F97316' },
+  'from-blue-500 to-blue-600': { from: '#3B82F6', to: '#2563EB' },
+  'from-rose-500 to-pink-500': { from: '#F43F5E', to: '#EC4899' },
+  'from-cyan-500 to-teal-500': { from: '#06B6D4', to: '#14B8A6' },
 };
 
-// Map workspace types to display labels
-const typeLabels: Record<string, { label: string; emoji: string }> = {
-  business: { label: 'Business', emoji: '🏢' },
-  personal: { label: 'Personal Brand', emoji: '✨' },
-  startup: { label: 'Startup', emoji: '🚀' },
-  agency: { label: 'Agency', emoji: '🎯' },
-  creator: { label: 'Creator', emoji: '🎨' },
-};
-
-// Mock social connections - in real app, this would come from useWorkspaces or a connections hook
+// Mock social connections
 const mockSocialConnections = {
   twitter: { connected: true, handle: '@acmeinc', url: 'https://twitter.com/acmeinc' },
   linkedin: { connected: true, handle: 'ACME Inc.', url: 'https://linkedin.com/company/acme' },
@@ -37,11 +28,11 @@ export default function WorkspaceBanner() {
 
   if (loading) {
     return (
-      <header className="workspace-header workspace-header-loading">
-        <div className="workspace-header-inner">
-          <div className="workspace-header-content">
-            <div className="workspace-header-avatar-skeleton" />
-            <div className="workspace-header-text-skeleton">
+      <header className="glass-header glass-header-loading">
+        <div className="glass-header-inner">
+          <div className="glass-header-left">
+            <div className="glass-avatar-skeleton" />
+            <div className="glass-text-skeleton">
               <div className="skeleton-line skeleton-title" />
               <div className="skeleton-line skeleton-subtitle" />
             </div>
@@ -53,37 +44,37 @@ export default function WorkspaceBanner() {
 
   if (!currentWorkspace) return null;
 
-  const gradient = gradientMap[currentWorkspace.color] || gradientMap['from-indigo-500 to-purple-500'];
-  const typeInfo = typeLabels[currentWorkspace.type] || { label: currentWorkspace.type, emoji: '📁' };
+  const colors = gradientMap[currentWorkspace.color] || gradientMap['from-indigo-500 to-purple-500'];
   const initials = currentWorkspace.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
   return (
-    <header className="workspace-header" style={{ background: gradient }}>
-      <div className="workspace-header-pattern" />
-      <div className="workspace-header-inner">
-        <div className="workspace-header-content">
-          <div className="workspace-header-avatar">
+    <header className="glass-header">
+      <div className="glass-header-inner">
+        {/* Left side - Company info */}
+        <div className="glass-header-left">
+          <div
+            className="glass-avatar"
+            style={{ background: `linear-gradient(135deg, ${colors.from}, ${colors.to})` }}
+          >
             {initials}
           </div>
-          <div className="workspace-header-info">
-            <h1 className="workspace-header-name">{currentWorkspace.name}</h1>
-            <div className="workspace-header-meta">
-              <span className="workspace-header-status">
-                <span className="workspace-header-status-dot" />
-                Active
-              </span>
+          <div className="glass-header-info">
+            <h1 className="glass-header-name">{currentWorkspace.name}</h1>
+            <div className="glass-header-status">
+              <span className="glass-status-dot" />
+              <span>Active</span>
             </div>
           </div>
         </div>
 
-        {/* Social Links - Icons Only */}
-        <div className="workspace-header-social-links">
+        {/* Right side - Social links */}
+        <div className="glass-header-right">
           {mockSocialConnections.twitter.connected && (
             <a
               href={mockSocialConnections.twitter.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="workspace-social-link"
+              className="glass-social-btn"
               title={`Twitter: ${mockSocialConnections.twitter.handle}`}
             >
               <TwitterIcon size={20} />
@@ -94,7 +85,7 @@ export default function WorkspaceBanner() {
               href={mockSocialConnections.linkedin.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="workspace-social-link"
+              className="glass-social-btn"
               title={`LinkedIn: ${mockSocialConnections.linkedin.handle}`}
             >
               <LinkedInIcon size={20} />
@@ -105,7 +96,7 @@ export default function WorkspaceBanner() {
               href={mockSocialConnections.instagram.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="workspace-social-link"
+              className="glass-social-btn"
               title={`Instagram: ${mockSocialConnections.instagram.handle}`}
             >
               <InstagramIcon size={20} />

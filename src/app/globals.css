@@ -25,21 +25,8 @@ body {
 }
 
 /* ==========================================
-   SIDEBAR
+   SIDEBAR (base styles - layout overrides below)
    ========================================== */
-.sidebar {
-    position: fixed;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 240px;
-    background: #FFFFFF;
-    border-right: 1px solid #F3F4F6;
-    padding: 24px 16px;
-    display: flex;
-    flex-direction: column;
-    z-index: 40;
-}
 
 /* Logo */
 .logo {
@@ -357,13 +344,8 @@ body {
 }
 
 /* ==========================================
-   MAIN CONTENT
+   MAIN CONTENT (base - layout overrides below)
    ========================================== */
-.main-content {
-    margin-left: 240px;
-    padding: 32px 40px;
-    max-width: 1200px;
-}
 
 /* ==========================================
    HEADER
@@ -2767,239 +2749,324 @@ body {
 }
 
 /* ==========================================
-   WORKSPACE HEADER (Sticky Profile Bar)
+   APP LAYOUT
    ========================================== */
 
-.main-content-wrapper {
+.app-layout {
     display: flex;
     flex-direction: column;
-    min-height: 100%;
+    min-height: 100vh;
 }
 
-.main-content-body {
+.app-body {
+    display: flex;
     flex: 1;
 }
 
-.workspace-header {
+/* ==========================================
+   LIQUID GLASS HEADER (visionOS / iOS 26 style)
+   ========================================== */
+
+.glass-header {
     position: sticky;
     top: 0;
-    z-index: 50;
-    display: flex;
-    align-items: center;
-    min-height: 80px;
-    margin: -32px -40px 28px -40px;
-    padding: 0;
-    overflow: hidden;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.04),
+        0 4px 12px rgba(0, 0, 0, 0.03),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
-.workspace-header-pattern {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image:
-        radial-gradient(circle at 10% 50%, rgba(255, 255, 255, 0.12) 0%, transparent 50%),
-        radial-gradient(circle at 90% 30%, rgba(255, 255, 255, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 30%);
-    pointer-events: none;
-}
-
-.workspace-header-inner {
+.glass-header-inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    width: 100%;
-    padding: 16px 40px;
-    position: relative;
-    z-index: 1;
+    padding: 12px 32px;
+    max-width: 100%;
 }
 
-.workspace-header-content {
+.glass-header-left {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
 }
 
-.workspace-header-avatar {
-    width: 52px;
-    height: 52px;
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(8px);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+.glass-avatar {
+    width: 46px;
+    height: 46px;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
     color: white;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
     flex-shrink: 0;
 }
 
-.workspace-header-info {
+.glass-header-info {
     display: flex;
     flex-direction: column;
     gap: 2px;
 }
 
-.workspace-header-name {
-    font-size: 20px;
-    font-weight: 700;
-    color: white;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+.glass-header-name {
+    font-size: 17px;
+    font-weight: 600;
+    color: #1a1a1a;
     margin: 0;
     line-height: 1.2;
 }
 
-.workspace-header-meta {
+.glass-header-status {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.9);
+    color: #10B981;
+    font-weight: 500;
 }
 
-.workspace-header-type {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.workspace-header-separator {
-    opacity: 0.5;
-}
-
-.workspace-header-status {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.workspace-header-status-dot {
+.glass-status-dot {
     width: 7px;
     height: 7px;
-    background: #4ADE80;
+    background: #10B981;
     border-radius: 50%;
-    box-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
-    animation: pulse-glow 2s infinite;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+    animation: glass-pulse 2s ease-in-out infinite;
 }
 
-@keyframes pulse-glow {
-    0%, 100% {
-        opacity: 1;
-        box-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
-    }
-    50% {
-        opacity: 0.7;
-        box-shadow: 0 0 12px rgba(74, 222, 128, 0.8);
-    }
+@keyframes glass-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
 }
 
-/* Social Links - Icon Only */
-.workspace-header-social-links {
+/* Social buttons - glass style */
+.glass-header-right {
     display: flex;
     gap: 8px;
 }
 
-.workspace-social-link {
+.glass-social-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-    color: white;
+    width: 42px;
+    height: 42px;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    color: #374151;
     text-decoration: none;
     transition: all 0.2s ease;
+    box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
-.workspace-social-link:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: translateY(-2px);
+.glass-social-btn:hover {
+    background: rgba(255, 255, 255, 0.85);
+    transform: translateY(-1px);
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
-.workspace-social-link svg {
+.glass-social-btn:active {
+    transform: translateY(0);
+}
+
+.glass-social-btn svg {
     width: 20px;
     height: 20px;
 }
 
 /* Loading state */
-.workspace-header-loading {
-    background: linear-gradient(135deg, #E5E7EB, #D1D5DB);
+.glass-header-loading {
+    background: rgba(245, 245, 247, 0.8);
 }
 
-.workspace-header-avatar-skeleton {
-    width: 52px;
-    height: 52px;
-    background: rgba(255, 255, 255, 0.3);
+.glass-avatar-skeleton {
+    width: 46px;
+    height: 46px;
+    background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+    background-size: 200% 100%;
     border-radius: 12px;
-    animation: skeleton-pulse 1.5s ease-in-out infinite;
+    animation: glass-skeleton 1.5s ease-in-out infinite;
 }
 
-.workspace-header-text-skeleton {
+.glass-text-skeleton {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .skeleton-line {
-    background: rgba(255, 255, 255, 0.3);
+    background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+    background-size: 200% 100%;
     border-radius: 4px;
-    animation: skeleton-pulse 1.5s ease-in-out infinite;
+    animation: glass-skeleton 1.5s ease-in-out infinite;
 }
 
 .skeleton-title {
-    width: 180px;
-    height: 22px;
+    width: 140px;
+    height: 18px;
 }
 
 .skeleton-subtitle {
-    width: 120px;
+    width: 60px;
     height: 14px;
 }
 
-@keyframes skeleton-pulse {
-    0%, 100% {
-        opacity: 0.6;
-    }
-    50% {
-        opacity: 0.3;
-    }
+@keyframes glass-skeleton {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ==========================================
+   SIDEBAR - Collapsible
+   ========================================== */
+
+.sidebar {
+    position: relative;
+    width: 240px;
+    min-width: 240px;
+    background: #FFFFFF;
+    border-right: 1px solid #F3F4F6;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.25s ease;
+    z-index: 40;
+    height: calc(100vh - 71px);
+    overflow-y: auto;
+}
+
+.sidebar-collapsed {
+    width: 72px;
+    min-width: 72px;
+    padding: 16px 12px;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.sidebar-collapse-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: #9CA3AF;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.sidebar-collapse-btn:hover {
+    background: #F3F4F6;
+    color: #6B7280;
+}
+
+.sidebar-collapsed .sidebar-header {
+    justify-content: center;
+}
+
+.sidebar-collapsed .logo {
+    margin-bottom: 0;
+}
+
+.sidebar-collapsed .sidebar-collapse-btn {
+    position: absolute;
+    right: -16px;
+    top: 20px;
+    background: white;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    z-index: 10;
+}
+
+.sidebar-collapsed .nav-item {
+    justify-content: center;
+    padding: 12px;
+}
+
+.sidebar-collapsed .user-section {
+    padding: 8px;
+}
+
+.sidebar-collapsed .user-row {
+    justify-content: center;
+}
+
+/* ==========================================
+   MAIN CONTENT - Adjusted for new layout
+   ========================================== */
+
+.main-content {
+    flex: 1;
+    padding: 28px 40px;
+    max-width: 1200px;
+    margin-left: 0;
+    overflow-y: auto;
+    height: calc(100vh - 71px);
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .workspace-header {
-        margin: -32px -20px 20px -20px;
-        min-height: auto;
+    .glass-header-inner {
+        padding: 10px 16px;
     }
 
-    .workspace-header-inner {
-        padding: 14px 20px;
+    .glass-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
     }
 
-    .workspace-header-name {
-        font-size: 17px;
+    .glass-header-name {
+        font-size: 15px;
     }
 
-    .workspace-header-avatar {
-        width: 44px;
-        height: 44px;
-        font-size: 16px;
+    .glass-social-btn {
+        width: 38px;
+        height: 38px;
     }
 
-    .workspace-social-link {
-        width: 36px;
-        height: 36px;
-    }
-
-    .workspace-social-link svg {
+    .glass-social-btn svg {
         width: 18px;
         height: 18px;
+    }
+
+    .sidebar {
+        position: fixed;
+        left: -240px;
+        top: 71px;
+        height: calc(100vh - 71px);
+        z-index: 50;
+    }
+
+    .sidebar.sidebar-open {
+        left: 0;
+    }
+
+    .main-content {
+        padding: 20px;
+        margin-left: 0;
     }
 }

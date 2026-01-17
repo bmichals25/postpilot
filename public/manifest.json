@@ -1,0 +1,27 @@
+{
+  "name": "PostPilot - AI-Powered Social Media Autoposter",
+  "short_name": "PostPilot",
+  "description": "Schedule and auto-post AI-generated content across Twitter, LinkedIn, and Instagram",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAFAF9",
+  "theme_color": "#6366F1",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "social"],
+  "screenshots": [],
+  "prefer_related_applications": false
+}

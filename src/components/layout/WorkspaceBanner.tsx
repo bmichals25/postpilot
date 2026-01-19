@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { useWorkspaces } from '@/hooks/useWorkspaces';
+import { useWorkspaceContext } from '@/contexts/WorkspaceContext';
 import { LogoIcon, TwitterIcon, LinkedInIcon, InstagramIcon, ChevronDownIcon, PlusIcon } from '@/components/icons';
 import AddBusinessModal from '@/components/modals/AddBusinessModal';
 
@@ -17,13 +16,6 @@ const gradientMap: Record<string, { from: string; to: string }> = {
   'from-cyan-500 to-teal-500': { from: '#06B6D4', to: '#14B8A6' },
 };
 
-// Mock social connections
-const mockSocialConnections = {
-  twitter: { connected: true, handle: '@acmeinc', url: 'https://twitter.com/acmeinc' },
-  linkedin: { connected: true, handle: 'ACME Inc.', url: 'https://linkedin.com/company/acme' },
-  instagram: { connected: true, handle: '@acme.inc', url: 'https://instagram.com/acme.inc' },
-};
-
 // Check icon for selected workspace
 const CheckIcon = ({ size = 16 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -32,8 +24,7 @@ const CheckIcon = ({ size = 16 }: { size?: number }) => (
 );
 
 export default function WorkspaceBanner() {
-  const { user } = useAuth();
-  const { workspaces, currentWorkspace, loading, selectWorkspace } = useWorkspaces(user?.id);
+  const { workspaces, currentWorkspace, connections, loading, selectWorkspace } = useWorkspaceContext();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isAddBusinessOpen, setIsAddBusinessOpen] = useState(false);
 
@@ -61,6 +52,11 @@ export default function WorkspaceBanner() {
   const getWorkspaceColors = (colorClass: string) => {
     return gradientMap[colorClass] || gradientMap['from-indigo-500 to-purple-500'];
   };
+
+  // Get connected platforms from real connections
+  const twitterConnection = connections.find(c => c.platform === 'twitter' && c.status === 'active');
+  const linkedinConnection = connections.find(c => c.platform === 'linkedin' && c.status === 'active');
+  const instagramConnection = connections.find(c => c.platform === 'instagram' && c.status === 'active');
 
   return (
     <>
@@ -154,40 +150,43 @@ export default function WorkspaceBanner() {
             </div>
           </div>
 
-          {/* Right side - Social links */}
+          {/* Right side - Social links (from real connections) */}
           <div className="glass-header-right">
-            {mockSocialConnections.twitter.connected && (
+            {twitterConnection && (
               <a
-                href={mockSocialConnections.twitter.url}
+                href={`https://twitter.com/${twitterConnection.platform_username?.replace('@', '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="glass-social-btn branded"
-                title={`Twitter: ${mockSocialConnections.twitter.handle}`}
+                title={`Twitter: ${twitterConnection.platform_username}`}
               >
                 <TwitterIcon size={20} />
               </a>
             )}
-            {mockSocialConnections.linkedin.connected && (
+            {linkedinConnection && (
               <a
-                href={mockSocialConnections.linkedin.url}
+                href={`https://linkedin.com/in/${linkedinConnection.platform_user_id}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="glass-social-btn branded"
-                title={`LinkedIn: ${mockSocialConnections.linkedin.handle}`}
+                title={`LinkedIn: ${linkedinConnection.platform_username}`}
               >
                 <LinkedInIcon size={20} />
               </a>
             )}
-            {mockSocialConnections.instagram.connected && (
+            {instagramConnection && (
               <a
-                href={mockSocialConnections.instagram.url}
+                href={`https://instagram.com/${instagramConnection.platform_username?.replace('@', '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="glass-social-btn branded"
-                title={`Instagram: ${mockSocialConnections.instagram.handle}`}
+                title={`Instagram: ${instagramConnection.platform_username}`}
               >
                 <InstagramIcon size={20} />
               </a>
+            )}
+            {connections.length === 0 && (
+              <span className="glass-header-no-connections">No platforms connected</span>
             )}
           </div>
         </div>
@@ -197,10 +196,6 @@ export default function WorkspaceBanner() {
       <AddBusinessModal
         isOpen={isAddBusinessOpen}
         onClose={() => setIsAddBusinessOpen(false)}
-        onComplete={(business) => {
-          console.log('New business added:', business);
-          setIsAddBusinessOpen(false);
-        }}
       />
     </>
   );

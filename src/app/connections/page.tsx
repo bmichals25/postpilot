@@ -1,184 +1,207 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useWorkspaceContext } from '@/contexts/WorkspaceContext';
 import {
   TwitterIcon,
   LinkedInIcon,
   InstagramIcon,
   CheckIcon,
-  CheckCircleIcon,
   AlertTriangleIcon,
-  ShieldIcon,
-  ClockIcon,
-  LightningIcon,
-  RefreshIcon,
-  SettingsIcon,
-  LogoutIcon,
   PlusIcon,
+  RefreshIcon,
+  XIcon,
 } from '@/components/icons';
 
-const platforms = [
-  {
-    id: 'twitter',
-    name: 'Twitter / X',
-    handle: '@postpilot',
-    status: 'healthy',
-    auth: 'Valid',
-    lastActivity: '2 hours ago',
-    apiStatus: 'Operational',
-  },
-  {
-    id: 'linkedin',
-    name: 'LinkedIn',
-    handle: 'Ben M.',
-    status: 'warning',
-    auth: 'Expiring Soon',
-    lastActivity: 'Yesterday',
-    apiStatus: 'Operational',
-    warning: {
-      title: 'Token expiring soon',
-      message: 'Your LinkedIn access token expires in 5 days. Re-authenticate to maintain uninterrupted posting.',
-    },
-  },
-  {
-    id: 'instagram',
-    name: 'Instagram',
-    handle: '@postpilot',
-    status: 'healthy',
-    auth: 'Valid',
-    lastActivity: '3 days ago',
-    apiStatus: 'Operational',
-  },
+// Available platforms that can be connected
+const availablePlatforms = [
+  { id: 'facebook', name: 'Facebook', icon: 'FB', comingSoon: true },
+  { id: 'youtube', name: 'YouTube', icon: 'YT', comingSoon: true },
+  { id: 'tiktok', name: 'TikTok', icon: 'TT', comingSoon: true },
 ];
 
 export default function ConnectionsPage() {
+  const { currentWorkspace, connections, refetchConnections } = useWorkspaceContext();
+  const [disconnecting, setDisconnecting] = useState<string | null>(null);
+
+  const getPlatformIcon = (platform: string, size = 20) => {
+    switch (platform) {
+      case 'twitter':
+        return <TwitterIcon size={size} />;
+      case 'linkedin':
+        return <LinkedInIcon size={size} />;
+      case 'instagram':
+        return <InstagramIcon size={size} />;
+      default:
+        return null;
+    }
+  };
+
+  const getPlatformName = (platform: string) => {
+    switch (platform) {
+      case 'twitter': return 'Twitter / X';
+      case 'linkedin': return 'LinkedIn';
+      case 'instagram': return 'Instagram';
+      default: return platform;
+    }
+  };
+
+  const getConnectionStatus = (connection: typeof connections[0]) => {
+    if (connection.status !== 'active') {
+      return { status: 'error', label: 'Disconnected', color: 'red' };
+    }
+    if (connection.expires_at) {
+      const expiresAt = new Date(connection.expires_at);
+      const daysUntilExpiry = Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+      if (daysUntilExpiry <= 7) {
+        return { status: 'warning', label: `Expires in ${daysUntilExpiry}d`, color: 'yellow' };
+      }
+    }
+    return { status: 'healthy', label: 'Connected', color: 'green' };
+  };
+
+  const handleDisconnect = async (connectionId: string) => {
+    setDisconnecting(connectionId);
+    // In production, this would call an API to revoke the connection
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    await refetchConnections();
+    setDisconnecting(null);
+  };
+
+  const handleConnect = (platform: string) => {
+    // In production, this would initiate OAuth flow
+    console.log('Connecting:', platform);
+    alert(`OAuth flow for ${platform} would start here`);
+  };
+
+  const unconnectedPlatforms = ['twitter', 'linkedin', 'instagram'].filter(
+    p => !connections.some(c => c.platform === p)
+  );
+
   return (
-    <div style={{ maxWidth: '1000px' }}>
+    <div className="connections-page">
       {/* Header */}
-      <header className="connections-header">
-        <h1>Platform Connections</h1>
-        <p>Manage your connected social media accounts and monitor their health status.</p>
+      <header className="page-header">
+        <div>
+          <h1>Platform Connections</h1>
+          <p>Manage social media accounts for {currentWorkspace?.name || 'your workspace'}</p>
+        </div>
       </header>
 
-      {/* Overall Status Banner */}
-      <div className="status-banner">
-        <div className="status-banner-icon">
-          <CheckCircleIcon size={28} className="text-white" />
+      {/* Connected Platforms Section */}
+      <div className="connections-section">
+        <div className="connections-section-header">
+          <h2>Connected Platforms ({connections.length})</h2>
+          {unconnectedPlatforms.length > 0 && (
+            <button className="btn-secondary btn-sm" onClick={() => handleConnect(unconnectedPlatforms[0])}>
+              <PlusIcon size={16} />
+              Add Platform
+            </button>
+          )}
         </div>
-        <div className="status-banner-content">
-          <div className="status-banner-title">All Systems Operational</div>
-          <div className="status-banner-subtitle">Your connected platforms are working perfectly. You&apos;re all set to post!</div>
-        </div>
-        <div className="status-banner-badge">
-          <div className="status-banner-badge-dot" />
-          <span>3 platforms connected</span>
-        </div>
+
+        {connections.length === 0 ? (
+          <div className="connections-empty">
+            <p>No platforms connected yet</p>
+            <button className="btn-primary" onClick={() => handleConnect('twitter')}>
+              Connect Your First Platform
+            </button>
+          </div>
+        ) : (
+          <div className="connections-list">
+            {connections.map((connection) => {
+              const status = getConnectionStatus(connection);
+              return (
+                <div key={connection.id} className="connection-row">
+                  <div className="connection-row-left">
+                    <div className={`connection-icon ${connection.platform}`}>
+                      {getPlatformIcon(connection.platform, 24)}
+                    </div>
+                    <div className="connection-info">
+                      <div className="connection-name">{getPlatformName(connection.platform)}</div>
+                      <div className="connection-handle">{connection.platform_username || connection.platform_user_id}</div>
+                    </div>
+                  </div>
+                  <div className="connection-row-right">
+                    <div className={`connection-status ${status.color}`}>
+                      {status.status === 'healthy' ? (
+                        <CheckIcon size={14} />
+                      ) : (
+                        <AlertTriangleIcon size={14} />
+                      )}
+                      <span>{status.label}</span>
+                    </div>
+                    <div className="connection-actions">
+                      {status.status === 'warning' && (
+                        <button
+                          className="btn-sm btn-warning"
+                          onClick={() => handleConnect(connection.platform)}
+                        >
+                          Re-auth
+                        </button>
+                      )}
+                      <button
+                        className="btn-sm btn-icon"
+                        onClick={() => refetchConnections()}
+                        title="Refresh"
+                      >
+                        <RefreshIcon size={16} />
+                      </button>
+                      <button
+                        className="btn-sm btn-icon btn-danger"
+                        onClick={() => handleDisconnect(connection.id)}
+                        disabled={disconnecting === connection.id}
+                        title="Disconnect"
+                      >
+                        <XIcon size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Platform Cards */}
-      <div className="platforms-grid">
-        {platforms.map((platform) => (
-          <div key={platform.id} className="platform-card">
-            {/* Card Header */}
-            <div className="platform-card-header">
-              <div className={`platform-logo ${platform.id}`}>
-                {platform.id === 'twitter' && <TwitterIcon size={28} className="text-black" />}
-                {platform.id === 'linkedin' && <LinkedInIcon size={28} />}
-                {platform.id === 'instagram' && <InstagramIcon size={28} gradient={false} className="text-white" />}
-              </div>
-              <div className="platform-info">
-                <div className="platform-card-name">{platform.name}</div>
-                <div className="platform-card-handle">{platform.handle}</div>
-              </div>
-              <div className={`platform-status-badge ${platform.status}`}>
-                {platform.status === 'healthy' ? (
-                  <CheckIcon size={18} />
-                ) : (
-                  <AlertTriangleIcon size={18} />
-                )}
-                {platform.status === 'healthy' ? 'Connected' : 'Attention Needed'}
-              </div>
-            </div>
-
-            {/* Warning Message (for LinkedIn) */}
-            {platform.warning && (
-              <div className="warning-message">
-                <AlertTriangleIcon size={24} className="warning-message-icon" />
-                <div className="warning-message-content">
-                  <div className="warning-message-title">{platform.warning.title}</div>
-                  <div className="warning-message-text">{platform.warning.message}</div>
+      {/* Add More Platforms */}
+      {unconnectedPlatforms.length > 0 && (
+        <div className="connections-section">
+          <div className="connections-section-header">
+            <h2>Add Platform</h2>
+          </div>
+          <div className="platforms-grid-small">
+            {unconnectedPlatforms.map((platform) => (
+              <button
+                key={platform}
+                className="platform-add-card"
+                onClick={() => handleConnect(platform)}
+              >
+                <div className={`platform-add-icon ${platform}`}>
+                  {getPlatformIcon(platform, 28)}
                 </div>
-                <button className="warning-message-action">Re-authenticate</button>
-              </div>
-            )}
-
-            {/* Health Details */}
-            <div className="health-details">
-              <div className="health-item">
-                <div className={`health-item-icon ${platform.auth === 'Valid' ? 'green' : 'yellow'}`}>
-                  <ShieldIcon size={18} />
-                </div>
-                <div className="health-item-content">
-                  <div className="health-item-label">Authentication</div>
-                  <div className="health-item-value">{platform.auth}</div>
-                </div>
-              </div>
-
-              <div className="health-item">
-                <div className="health-item-icon blue">
-                  <ClockIcon size={18} />
-                </div>
-                <div className="health-item-content">
-                  <div className="health-item-label">Last Activity</div>
-                  <div className="health-item-value">{platform.lastActivity}</div>
-                </div>
-              </div>
-
-              <div className="health-item">
-                <div className="health-item-icon green">
-                  <LightningIcon size={18} />
-                </div>
-                <div className="health-item-content">
-                  <div className="health-item-label">API Status</div>
-                  <div className="health-item-value">{platform.apiStatus}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="platform-actions">
-              {platform.status === 'warning' ? (
-                <button className="platform-action-btn primary">
-                  <RefreshIcon size={16} />
-                  Re-authenticate Now
-                </button>
-              ) : (
-                <button className="platform-action-btn">
-                  <RefreshIcon size={16} />
-                  Refresh Connection
-                </button>
-              )}
-              <button className="platform-action-btn">
-                <SettingsIcon size={16} />
-                Configure
+                <span>{getPlatformName(platform)}</span>
               </button>
-              <button className="platform-action-btn danger">
-                <LogoutIcon size={16} />
-                Disconnect
-              </button>
-            </div>
+            ))}
           </div>
-        ))}
+        </div>
+      )}
 
-        {/* Add New Platform Card */}
-        <div className="add-platform-card">
-          <div className="add-platform-icon">
-            <PlusIcon size={28} />
-          </div>
-          <div className="add-platform-text">
-            <div className="add-platform-title">Connect Another Platform</div>
-            <div className="add-platform-subtitle">Add more social accounts to expand your reach</div>
-          </div>
+      {/* Coming Soon */}
+      <div className="connections-section">
+        <div className="connections-section-header">
+          <h2>Coming Soon</h2>
+        </div>
+        <div className="platforms-grid-small coming-soon">
+          {availablePlatforms.map((platform) => (
+            <div key={platform.id} className="platform-add-card disabled">
+              <div className="platform-add-icon">
+                <span className="platform-icon-text">{platform.icon}</span>
+              </div>
+              <span>{platform.name}</span>
+              <span className="coming-soon-badge">Soon</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>

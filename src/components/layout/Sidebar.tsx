@@ -11,6 +11,9 @@ import {
   ChartIcon,
   LinkIcon,
   SettingsIcon,
+  ChevronDownIcon,
+  LogoutIcon,
+  CreditCardIcon,
 } from '@/components/icons';
 
 // Brand Guide icon
@@ -53,9 +56,10 @@ const ChevronRightIcon = ({ size = 16 }: { size?: number }) => (
 export default function Sidebar() {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   // Use auth hook for user data
-  const { user, profile, credits, loading: authLoading } = useAuth();
+  const { user, profile, credits, loading: authLoading, signOut } = useAuth();
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/';
@@ -71,6 +75,11 @@ export default function Sidebar() {
   // User display info
   const userName = profile?.name ?? user?.email?.split('@')[0] ?? 'Ben';
   const userInitial = userName.charAt(0).toUpperCase();
+
+  const handleSignOut = async () => {
+    setIsUserMenuOpen(false);
+    await signOut();
+  };
 
   return (
     <div className={`sidebar-wrapper ${isCollapsed ? 'collapsed' : ''}`}>
@@ -121,17 +130,45 @@ export default function Sidebar() {
 
         {/* User Section with AI Credits */}
         <div className="user-section">
-          <div className="user-row">
+          <button
+            className={`user-row-btn ${isUserMenuOpen ? 'open' : ''}`}
+            onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+          >
             <div className="user-avatar">
               {userInitial}
             </div>
             {!isCollapsed && (
-              <div className="user-info">
-                <div className="user-name">{userName}</div>
-                <div className="user-plan">Pro Plan</div>
-              </div>
+              <>
+                <div className="user-info">
+                  <div className="user-name">{userName}</div>
+                  <div className="user-plan">Pro Plan</div>
+                </div>
+                <ChevronDownIcon size={14} className="user-chevron" />
+              </>
             )}
-          </div>
+          </button>
+
+          {/* User Menu Dropdown */}
+          {isUserMenuOpen && !isCollapsed && (
+            <>
+              <div className="user-menu-backdrop" onClick={() => setIsUserMenuOpen(false)} />
+              <div className="user-menu">
+                <button className="user-menu-item">
+                  <SettingsIcon size={16} />
+                  My Account
+                </button>
+                <button className="user-menu-item">
+                  <CreditCardIcon size={16} />
+                  Billing
+                </button>
+                <div className="user-menu-divider" />
+                <button className="user-menu-item danger" onClick={handleSignOut}>
+                  <LogoutIcon size={16} />
+                  Sign Out
+                </button>
+              </div>
+            </>
+          )}
 
           {/* AI Credits */}
           {!isCollapsed && (

@@ -4,6 +4,7 @@ import "./globals.css";
 import Sidebar from "@/components/layout/Sidebar";
 import WorkspaceBanner from "@/components/layout/WorkspaceBanner";
 import Analytics from "@/components/Analytics";
+import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -60,15 +61,17 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} antialiased`}>
-        <div className="app-layout">
-          <WorkspaceBanner />
-          <div className="app-body">
-            <Sidebar />
-            <main className="main-content">
-              {children}
-            </main>
+        <WorkspaceProvider>
+          <div className="app-layout">
+            <WorkspaceBanner />
+            <div className="app-body">
+              <Sidebar />
+              <main className="main-content">
+                {children}
+              </main>
+            </div>
           </div>
-        </div>
+        </WorkspaceProvider>
         <Analytics />
       </body>
     </html>

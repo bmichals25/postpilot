@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
+import { useWorkspaceContext } from '@/contexts/WorkspaceContext';
+import { usePosts } from '@/hooks/useWorkspaces';
 import {
   PlusIcon,
   TwitterIcon,
@@ -11,89 +13,88 @@ import {
   ChevronRightIcon,
 } from '@/components/icons';
 
-// Sample calendar data
-const weekDays = [
-  { day: 'Mon', date: 13, isToday: false },
-  { day: 'Tue', date: 14, isToday: true },
-  { day: 'Wed', date: 15, isToday: false },
-  { day: 'Thu', date: 16, isToday: false },
-  { day: 'Fri', date: 17, isToday: false },
-  { day: 'Sat', date: 18, isToday: false },
-  { day: 'Sun', date: 19, isToday: false },
-];
+// Day names
+const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-const calendarPosts: Record<number, Array<{
-  id: string;
-  time: string;
-  content: string;
-  platforms: string[];
-  media?: { type: string; url: string };
-  isDraft?: boolean;
-}>> = {
-  13: [
-    {
-      id: '1',
-      time: '9:00 AM',
-      content: 'Excited to share our latest feature update! The new dashboard makes tracking easier...',
-      platforms: ['twitter', 'linkedin'],
-      media: { type: 'image', url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=100&h=100&fit=crop' },
-    },
-  ],
-  14: [
-    {
-      id: '2',
-      time: '10:00 AM',
-      content: 'Monday motivation: Building something you believe in is the best feeling...',
-      platforms: ['instagram'],
-      media: { type: 'video', url: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=100&h=100&fit=crop' },
-    },
-    {
-      id: '3',
-      time: '3:00 PM',
-      content: 'Quick tip: Consistency beats perfection every time. Show up and share value!',
-      platforms: ['twitter'],
-    },
-  ],
-  15: [
-    {
-      id: '4',
-      time: '2:30 PM',
-      content: 'Behind the scenes look at how we build our products. Thread incoming...',
-      platforms: ['twitter'],
-      media: { type: 'image', url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=100&h=100&fit=crop' },
-      isDraft: true,
-    },
-  ],
-  16: [
-    {
-      id: '5',
-      time: '11:00 AM',
-      content: "We're hiring! Looking for passionate engineers to join our team. DM for details.",
-      platforms: ['linkedin'],
-    },
-  ],
-  17: [
-    {
-      id: '6',
-      time: '4:00 PM',
-      content: 'Friday wins! What did you accomplish this week? Share below!',
-      platforms: ['twitter', 'linkedin'],
-      media: { type: 'image', url: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=100&h=100&fit=crop' },
-    },
-  ],
-  19: [
-    {
-      id: '7',
-      time: '7:00 PM',
-      content: 'Week ahead preview: Big announcements coming. Stay tuned!',
-      platforms: ['twitter'],
-    },
-  ],
-};
+// Format time from ISO string
+function formatTime(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
+
+// Format date range string
+function formatDateRange(startDate: Date, endDate: Date): string {
+  const startMonth = startDate.toLocaleString('en-US', { month: 'long' });
+  const endMonth = endDate.toLocaleString('en-US', { month: 'long' });
+  const year = endDate.getFullYear();
+
+  if (startMonth === endMonth) {
+    return `${startMonth} ${startDate.getDate()} - ${endDate.getDate()}, ${year}`;
+  }
+  return `${startMonth} ${startDate.getDate()} - ${endMonth} ${endDate.getDate()}, ${year}`;
+}
 
 export default function SchedulePage() {
+  const { currentWorkspace, connections } = useWorkspaceContext();
+  const { posts, loading } = usePosts(currentWorkspace?.id);
+
   const [activeView, setActiveView] = useState<'week' | 'month'>('week');
   const [activePlatforms, setActivePlatforms] = useState(['twitter', 'linkedin', 'instagram']);
+  const [weekOffset, setWeekOffset] = useState(0);
+
+  // Get the week dates based on offset
+  const weekDates = useMemo(() => {
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    // Get Monday of current week
+    const dayOfWeek = today.getDay();
+    const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Adjust for Sunday
+    startOfWeek.setDate(today.getDate() + diff + (weekOffset * 7));
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    return Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(startOfWeek);
+      date.setDate(startOfWeek.getDate() + i);
+      return date;
+    });
+  }, [weekOffset]);
+
+  // Check if a date is today
+  const isToday = (date: Date): boolean => {
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+           date.getMonth() === today.getMonth() &&
+           date.getFullYear() === today.getFullYear();
+  };
+
+  // Transform posts to calendar format grouped by date key
+  const calendarPosts = useMemo(() => {
+    const grouped: Record<string, typeof posts> = {};
+
+    for (const post of posts) {
+      if (!post.scheduled_at) continue;
+      const postDate = new Date(post.scheduled_at);
+      // Create a date key like "2026-01-15" for consistent grouping
+      const dateKey = `${postDate.getFullYear()}-${String(postDate.getMonth() + 1).padStart(2, '0')}-${String(postDate.getDate()).padStart(2, '0')}`;
+
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey].push(post);
+    }
+
+    return grouped;
+  }, [posts]);
+
+  // Get the available platforms from connections
+  const availablePlatforms = useMemo(() => {
+    const platforms = connections.map(c => c.platform.toLowerCase());
+    // Default to standard platforms if no connections
+    if (platforms.length === 0) {
+      return ['twitter', 'linkedin', 'instagram'];
+    }
+    return [...new Set(platforms)];
+  }, [connections]);
 
   const togglePlatform = (platform: string) => {
     if (activePlatforms.includes(platform)) {
@@ -102,6 +103,13 @@ export default function SchedulePage() {
       setActivePlatforms([...activePlatforms, platform]);
     }
   };
+
+  const goToPreviousWeek = () => setWeekOffset(prev => prev - 1);
+  const goToNextWeek = () => setWeekOffset(prev => prev + 1);
+  const goToToday = () => setWeekOffset(0);
+
+  // Date range display
+  const dateRange = formatDateRange(weekDates[0], weekDates[6]);
 
   return (
     <div>
@@ -138,24 +146,24 @@ export default function SchedulePage() {
         <div className="calendar-nav-left">
           {/* Nav Arrows */}
           <div className="nav-arrows">
-            <button className="nav-arrow">
+            <button className="nav-arrow" onClick={goToPreviousWeek}>
               <ChevronLeftIcon size={18} />
             </button>
-            <button className="nav-arrow">
+            <button className="nav-arrow" onClick={goToNextWeek}>
               <ChevronRightIcon size={18} />
             </button>
           </div>
 
           {/* Today Button */}
-          <button className="today-btn">Today</button>
+          <button className="today-btn" onClick={goToToday}>Today</button>
 
           {/* Current Range */}
-          <span className="current-range">January 13 - 19, 2026</span>
+          <span className="current-range">{dateRange}</span>
         </div>
 
         {/* Platform Filters */}
         <div className="platform-filters">
-          {['twitter', 'linkedin', 'instagram'].map((platform) => (
+          {availablePlatforms.map((platform) => (
             <button
               key={platform}
               onClick={() => togglePlatform(platform)}
@@ -169,80 +177,92 @@ export default function SchedulePage() {
         </div>
       </div>
 
+      {/* Loading state */}
+      {loading && (
+        <div className="flex justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        </div>
+      )}
+
       {/* Calendar Grid */}
-      <div className="calendar-container">
-        {/* Calendar Header */}
-        <div className="calendar-header">
-          {weekDays.map((day) => (
-            <div key={day.day} className={`calendar-header-cell ${day.isToday ? 'today' : ''}`}>
-              <div className="day-name">{day.day}</div>
-              <div className="day-number">{day.date}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Calendar Body */}
-        <div className="calendar-body">
-          {weekDays.map((day) => {
-            const posts = calendarPosts[day.date] || [];
-            const filteredPosts = posts.filter((post) =>
-              post.platforms.some((p) => activePlatforms.includes(p))
-            );
-
-            return (
-              <div
-                key={day.day}
-                className={`calendar-day ${day.isToday ? 'today' : ''}`}
-              >
-                {filteredPosts.map((post) => (
-                  <div
-                    key={post.id}
-                    className={`post-card ${post.isDraft ? 'draft' : ''}`}
-                  >
-                    {/* Time */}
-                    <div className="post-time">{post.time}</div>
-
-                    {/* Content */}
-                    <div className="post-content">
-                      {/* Media */}
-                      {post.media && (
-                        <div className={`post-media ${post.media.type === 'video' ? 'video' : ''}`}>
-                          <Image
-                            src={post.media.url}
-                            alt=""
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                      )}
-
-                      {/* Text */}
-                      <div className="post-text">{post.content}</div>
-                    </div>
-
-                    {/* Platforms */}
-                    <div className="post-platforms">
-                      {post.platforms.map((platform) => (
-                        <div key={platform} className={`post-platform ${platform}`}>
-                          {platform === 'twitter' && <TwitterIcon size={12} className="text-black" />}
-                          {platform === 'linkedin' && <LinkedInIcon size={12} />}
-                          {platform === 'instagram' && <InstagramIcon size={12} />}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-
-                {/* Add Post Slot */}
-                <button className="add-post-slot">
-                  <PlusIcon size={14} />
-                  Add post
-                </button>
+      {!loading && (
+        <div className="calendar-container">
+          {/* Calendar Header */}
+          <div className="calendar-header">
+            {weekDates.map((date, index) => (
+              <div key={index} className={`calendar-header-cell ${isToday(date) ? 'today' : ''}`}>
+                <div className="day-name">{dayNames[date.getDay()]}</div>
+                <div className="day-number">{date.getDate()}</div>
               </div>
-            );
-          })}
+            ))}
+          </div>
+
+          {/* Calendar Body */}
+          <div className="calendar-body">
+            {weekDates.map((date, index) => {
+              const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+              const dayPosts = calendarPosts[dateKey] || [];
+              const filteredPosts = dayPosts.filter((post) =>
+                post.platforms.some((p) => activePlatforms.includes(p.toLowerCase()))
+              );
+
+              return (
+                <div
+                  key={index}
+                  className={`calendar-day ${isToday(date) ? 'today' : ''}`}
+                >
+                  {filteredPosts.map((post) => (
+                    <div
+                      key={post.id}
+                      className={`post-card ${post.status === 'draft' ? 'draft' : ''}`}
+                    >
+                      {/* Time */}
+                      <div className="post-time">
+                        {post.scheduled_at ? formatTime(post.scheduled_at) : 'No time'}
+                      </div>
+
+                      {/* Content */}
+                      <div className="post-content">
+                        {/* Media */}
+                        {post.media_url && (
+                          <div className="post-media">
+                            <Image
+                              src={post.media_url}
+                              alt=""
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        )}
+
+                        {/* Text */}
+                        <div className="post-text">{post.content}</div>
+                      </div>
+
+                      {/* Platforms */}
+                      <div className="post-platforms">
+                        {post.platforms.map((platform) => (
+                          <div key={platform} className={`post-platform ${platform.toLowerCase()}`}>
+                            {platform.toLowerCase() === 'twitter' && <TwitterIcon size={12} className="text-black" />}
+                            {platform.toLowerCase() === 'linkedin' && <LinkedInIcon size={12} />}
+                            {platform.toLowerCase() === 'instagram' && <InstagramIcon size={12} />}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Add Post Slot */}
+                  <button className="add-post-slot">
+                    <PlusIcon size={14} />
+                    Add post
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

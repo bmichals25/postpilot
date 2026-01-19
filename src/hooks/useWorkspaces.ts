@@ -4,6 +4,16 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import type { Workspace, Post, PlatformConnection, PostInsert, PostUpdate } from '@/types/database';
 
+// Default workspace settings
+const defaultSettings = {
+  default_platforms: [],
+  default_hashtags: [],
+  auto_schedule: false,
+  ai_tone: 'professional',
+  ai_max_length: 280,
+  ai_emojis: 'sometimes',
+};
+
 // Mock data for when user is not authenticated
 const mockWorkspaces: Workspace[] = [
   {
@@ -12,6 +22,7 @@ const mockWorkspaces: Workspace[] = [
     type: 'business',
     color: 'from-emerald-500 to-emerald-600',
     owner_id: 'mock-user',
+    settings: defaultSettings,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -21,6 +32,7 @@ const mockWorkspaces: Workspace[] = [
     type: 'personal',
     color: 'from-indigo-500 to-purple-500',
     owner_id: 'mock-user',
+    settings: defaultSettings,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -30,6 +42,7 @@ const mockWorkspaces: Workspace[] = [
     type: 'startup',
     color: 'from-amber-500 to-orange-500',
     owner_id: 'mock-user',
+    settings: defaultSettings,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },

@@ -52,6 +52,7 @@ export interface Database {
           type: string;
           color: string;
           owner_id: string;
+          settings: Json;
           created_at: string;
           updated_at: string;
         };
@@ -61,6 +62,7 @@ export interface Database {
           type: string;
           color: string;
           owner_id: string;
+          settings?: Json;
           created_at?: string;
           updated_at?: string;
         };
@@ -70,6 +72,7 @@ export interface Database {
           type?: string;
           color?: string;
           owner_id?: string;
+          settings?: Json;
           created_at?: string;
           updated_at?: string;
         };
@@ -210,6 +213,78 @@ export interface Database {
         };
         Relationships: [];
       };
+      brand_guides: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          colors: Json;
+          heading_font: string;
+          body_font: string;
+          voice_tones: string[];
+          voice_keywords: string[];
+          voice_description: string | null;
+          audience_demographics: string | null;
+          audience_interests: string | null;
+          audience_pain_points: string | null;
+          tagline: string | null;
+          value_props: string[];
+          do_list: string[];
+          dont_list: string[];
+          logo_url: string | null;
+          logo_dark_url: string | null;
+          icon_url: string | null;
+          domain: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          colors?: Json;
+          heading_font?: string;
+          body_font?: string;
+          voice_tones?: string[];
+          voice_keywords?: string[];
+          voice_description?: string | null;
+          audience_demographics?: string | null;
+          audience_interests?: string | null;
+          audience_pain_points?: string | null;
+          tagline?: string | null;
+          value_props?: string[];
+          do_list?: string[];
+          dont_list?: string[];
+          logo_url?: string | null;
+          logo_dark_url?: string | null;
+          icon_url?: string | null;
+          domain?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          workspace_id?: string;
+          colors?: Json;
+          heading_font?: string;
+          body_font?: string;
+          voice_tones?: string[];
+          voice_keywords?: string[];
+          voice_description?: string | null;
+          audience_demographics?: string | null;
+          audience_interests?: string | null;
+          audience_pain_points?: string | null;
+          tagline?: string | null;
+          value_props?: string[];
+          do_list?: string[];
+          dont_list?: string[];
+          logo_url?: string | null;
+          logo_dark_url?: string | null;
+          icon_url?: string | null;
+          domain?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -248,3 +323,26 @@ export type PlatformConnectionInsert = Database['public']['Tables']['platform_co
 export type UserUpdate = Database['public']['Tables']['users']['Update'];
 export type WorkspaceUpdate = Database['public']['Tables']['workspaces']['Update'];
 export type PostUpdate = Database['public']['Tables']['posts']['Update'];
+
+// Brand Guide types (derived from database schema)
+export type BrandGuide = Database['public']['Tables']['brand_guides']['Row'];
+export type BrandGuideInsert = Database['public']['Tables']['brand_guides']['Insert'];
+export type BrandGuideUpdate = Database['public']['Tables']['brand_guides']['Update'];
+
+// Brand colors type
+export interface BrandColors {
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+}
+
+// Workspace settings type
+export interface WorkspaceSettings {
+  default_platforms: string[];
+  default_hashtags: string[];
+  auto_schedule: boolean;
+  ai_tone: string;
+  ai_max_length: number;
+  ai_emojis: 'never' | 'sometimes' | 'always';
+}

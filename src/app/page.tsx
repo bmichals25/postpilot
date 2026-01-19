@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
+import { useWorkspaceContext } from '@/contexts/WorkspaceContext';
+import { usePosts } from '@/hooks/useWorkspaces';
 import {
   PlusIcon,
   TwitterIcon,
@@ -17,65 +19,6 @@ import {
 } from '@/components/icons';
 import NewPostModal from '@/components/modals/NewPostModal';
 
-// Sample posts data
-const upcomingPosts = [
-  {
-    id: '1',
-    day: 'Today',
-    time: '3:00 PM',
-    platforms: ['twitter', 'linkedin'],
-    content: 'Excited to share our latest feature update! The new dashboard makes tracking your social performance easier than ever...',
-    status: 'scheduled',
-    isAiGenerated: true,
-    media: {
-      type: 'image',
-      url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=150&h=150&fit=crop',
-      filename: 'dashboard-preview.jpg',
-      dimensions: '1200 x 800 px',
-      size: '245 KB',
-    },
-  },
-  {
-    id: '2',
-    day: 'Tomorrow',
-    time: '10:00 AM',
-    platforms: ['instagram'],
-    content: 'Monday motivation: Building something you believe in is the best feeling. What are you working on this week?',
-    status: 'scheduled',
-    isAiGenerated: false,
-    media: {
-      type: 'video',
-      url: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=150&h=150&fit=crop',
-      filename: 'team-motivation.mp4',
-      duration: '0:45',
-      dimensions: '1920 x 1080',
-      size: '12.4 MB',
-    },
-  },
-  {
-    id: '3',
-    day: 'Wed',
-    time: '2:30 PM',
-    platforms: ['twitter'],
-    content: 'Quick tip: Consistency beats perfection every time. Show up, share value, and watch your audience grow...',
-    status: 'draft',
-    isAiGenerated: false,
-    media: null,
-  },
-];
-
-const recentActivity = [
-  { id: '1', type: 'success', message: 'Post published to Twitter', time: '2 hours ago' },
-  { id: '2', type: 'info', message: 'AI generated 3 new posts', time: '5 hours ago' },
-  { id: '3', type: 'success', message: 'LinkedIn account connected', time: 'Yesterday' },
-];
-
-const platformConnections = [
-  { id: 'twitter', name: 'Twitter/X', handle: '@postpilot', connected: true },
-  { id: 'linkedin', name: 'LinkedIn', handle: 'Ben M.', connected: true },
-  { id: 'instagram', name: 'Instagram', handle: '@postpilot', connected: true },
-];
-
 interface MediaType {
   type: string;
   url: string;
@@ -86,8 +29,76 @@ interface MediaType {
 }
 
 export default function Dashboard() {
+  const { currentWorkspace, connections, loading: workspaceLoading } = useWorkspaceContext();
+  const { posts, loading: postsLoading } = usePosts(currentWorkspace?.id);
   const [selectedMedia, setSelectedMedia] = useState<MediaType | null>(null);
   const [isNewPostOpen, setIsNewPostOpen] = useState(false);
+
+  // Transform posts to upcoming posts format
+  const upcomingPosts = useMemo(() => {
+    return posts
+      .filter(p => p.status === 'scheduled' || p.status === 'draft')
+      .slice(0, 5)
+      .map(post => {
+        const scheduledDate = post.scheduled_at ? new Date(post.scheduled_at) : new Date();
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        let day = scheduledDate.toLocaleDateString('en-US', { weekday: 'short' });
+        if (scheduledDate.toDateString() === today.toDateString()) day = 'Today';
+        else if (scheduledDate.toDateString() === tomorrow.toDateString()) day = 'Tomorrow';
+
+        return {
+          id: post.id,
+          day,
+          time: scheduledDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+          platforms: post.platforms,
+          content: post.content,
+          status: post.status,
+          isAiGenerated: post.ai_generated,
+          media: post.media_url ? {
+            type: 'image',
+            url: post.media_url,
+            filename: 'media',
+            dimensions: '',
+            size: '',
+            duration: undefined,
+          } : null,
+        };
+      });
+  }, [posts]);
+
+  // Transform connections to platform format
+  const platformConnections = useMemo(() => {
+    return connections.map(conn => ({
+      id: conn.platform,
+      name: conn.platform === 'twitter' ? 'Twitter/X' : conn.platform.charAt(0).toUpperCase() + conn.platform.slice(1),
+      handle: conn.platform_username || conn.platform_user_id,
+      connected: conn.status === 'active',
+    }));
+  }, [connections]);
+
+  // Keep recent activity as mock for now (would need activity log table)
+  const recentActivity = [
+    { id: '1', type: 'success', message: 'Post published to Twitter', time: '2 hours ago' },
+    { id: '2', type: 'info', message: 'AI generated 3 new posts', time: '5 hours ago' },
+    { id: '3', type: 'success', message: 'LinkedIn account connected', time: 'Yesterday' },
+  ];
+
+  // Get greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  // Get user name from workspace
+  const userName = currentWorkspace?.name?.split(' ')[0] || 'there';
+
+  // Calculate scheduled posts count
+  const scheduledPostsCount = posts.filter(p => p.status === 'scheduled').length;
 
   const getPlatformIcon = (platform: string) => {
     switch (platform) {
@@ -102,13 +113,21 @@ export default function Dashboard() {
     }
   };
 
+  const loading = workspaceLoading || postsLoading;
+
   return (
     <>
       {/* Header */}
       <header className="header">
         <div className="greeting">
-          <h1>Good afternoon, Ben!</h1>
-          <p>You have 3 posts scheduled for this week. Keep up the great work!</p>
+          <h1>{getGreeting()}, {userName}!</h1>
+          <p>
+            {loading
+              ? 'Loading your posts...'
+              : scheduledPostsCount > 0
+                ? `You have ${scheduledPostsCount} post${scheduledPostsCount === 1 ? '' : 's'} scheduled. Keep up the great work!`
+                : 'No posts scheduled yet. Ready to create one?'}
+          </p>
         </div>
         <button className="create-btn" onClick={() => setIsNewPostOpen(true)}>
           <PlusIcon size={20} />
@@ -119,15 +138,19 @@ export default function Dashboard() {
       {/* Connected Platforms Bar */}
       <div className="platforms-bar">
         <span className="platforms-label">Connected:</span>
-        {platformConnections.map((platform) => (
-          <div key={platform.id} className="platform-pill">
-            {platform.id === 'twitter' && <TwitterIcon size={16} />}
-            {platform.id === 'linkedin' && <LinkedInIcon size={16} />}
-            {platform.id === 'instagram' && <InstagramIcon size={16} />}
-            <span className="status-dot" />
-            {platform.handle}
-          </div>
-        ))}
+        {platformConnections.length === 0 ? (
+          <span className="no-platforms">No platforms connected yet</span>
+        ) : (
+          platformConnections.map((platform) => (
+            <div key={platform.id} className="platform-pill">
+              {platform.id === 'twitter' && <TwitterIcon size={16} />}
+              {platform.id === 'linkedin' && <LinkedInIcon size={16} />}
+              {platform.id === 'instagram' && <InstagramIcon size={16} />}
+              <span className="status-dot" />
+              {platform.handle}
+            </div>
+          ))
+        )}
         <button className="add-platform">
           <PlusIcon size={14} />
           Add Platform
@@ -143,79 +166,93 @@ export default function Dashboard() {
             <button className="card-action">View All</button>
           </div>
           <div className="schedule-list">
-            {upcomingPosts.map((post) => (
-              <div key={post.id} className="schedule-item">
-                {/* Time */}
-                <div className="schedule-time">
-                  <div className="schedule-day">{post.day}</div>
-                  <div className="schedule-hour">{post.time}</div>
-                </div>
-
-                {/* Content */}
-                <div className="schedule-content">
-                  {/* Platforms */}
-                  <div className="schedule-platforms">
-                    {post.platforms.map((platform) => (
-                      <div
-                        key={platform}
-                        className={`schedule-platform-icon ${platform}`}
-                      >
-                        {getPlatformIcon(platform)}
-                      </div>
-                    ))}
+            {loading ? (
+              <div className="empty-state">
+                <p>Loading posts...</p>
+              </div>
+            ) : upcomingPosts.length === 0 ? (
+              <div className="empty-state">
+                <p>No upcoming posts scheduled.</p>
+                <button className="create-btn-small" onClick={() => setIsNewPostOpen(true)}>
+                  <PlusIcon size={16} />
+                  Create your first post
+                </button>
+              </div>
+            ) : (
+              upcomingPosts.map((post) => (
+                <div key={post.id} className="schedule-item">
+                  {/* Time */}
+                  <div className="schedule-time">
+                    <div className="schedule-day">{post.day}</div>
+                    <div className="schedule-hour">{post.time}</div>
                   </div>
 
-                  {/* Body */}
-                  <div className="schedule-body">
-                    {/* Media Preview (on left) */}
-                    {post.media && (
-                      <div
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedMedia(post.media as MediaType);
-                        }}
-                        className="media-preview"
-                      >
-                        <Image
-                          src={post.media.url}
-                          alt="Media preview"
-                          fill
-                          className="object-cover"
-                        />
-                        {post.media.type === 'video' && (
-                          <div className="video-overlay">
-                            <PlayIcon size={10} />
+                  {/* Content */}
+                  <div className="schedule-content">
+                    {/* Platforms */}
+                    <div className="schedule-platforms">
+                      {post.platforms.map((platform) => (
+                        <div
+                          key={platform}
+                          className={`schedule-platform-icon ${platform}`}
+                        >
+                          {getPlatformIcon(platform)}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Body */}
+                    <div className="schedule-body">
+                      {/* Media Preview (on left) */}
+                      {post.media && (
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedMedia(post.media as MediaType);
+                          }}
+                          className="media-preview"
+                        >
+                          <Image
+                            src={post.media.url}
+                            alt="Media preview"
+                            fill
+                            className="object-cover"
+                          />
+                          {post.media.type === 'video' && (
+                            <div className="video-overlay">
+                              <PlayIcon size={10} />
+                            </div>
+                          )}
+                          <div className="media-badge">
+                            {post.media.type === 'video' ? (
+                              <>
+                                <PlayIcon size={8} />
+                                {post.media.duration}
+                              </>
+                            ) : (
+                              <ImageIcon size={10} />
+                            )}
                           </div>
-                        )}
-                        <div className="media-badge">
-                          {post.media.type === 'video' ? (
-                            <>
-                              <PlayIcon size={8} />
-                              {post.media.duration}
-                            </>
-                          ) : (
-                            <ImageIcon size={10} />
+                        </div>
+                      )}
+
+                      {/* Text */}
+                      <div className="schedule-text-wrap">
+                        <p className="schedule-text">{post.content}</p>
+                        <div className="schedule-status">
+                          <span className={`status-badge ${post.status}`}>
+                            {post.status === 'scheduled' ? 'Scheduled' : 'Draft'}
+                          </span>
+                          {post.isAiGenerated && (
+                            <span className="status-badge ai">AI Generated</span>
                           )}
                         </div>
-                      </div>
-                    )}
-
-                    {/* Text */}
-                    <div className="schedule-text-wrap">
-                      <p className="schedule-text">{post.content}</p>
-                      <div className="schedule-status">
-                        <span className={`status-badge ${post.status}`}>
-                          {post.status === 'scheduled' ? 'Scheduled' : 'Draft'}
-                        </span>
-                        {post.isAiGenerated && (
-                          <span className="status-badge ai">AI Generated</span>
-                        )}
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 

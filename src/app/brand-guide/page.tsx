@@ -1,7 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useWorkspaceContext } from '@/contexts/WorkspaceContext';
+import { useBrandGuide } from '@/hooks/useBrandGuide';
+import { useAuth } from '@/hooks/useAuth';
 import { LightningIcon, PlusIcon } from '@/components/icons';
+import type { BrandColors } from '@/types/database';
 
 // Icons
 const PaletteIcon = ({ size = 20 }: { size?: number }) => (
@@ -73,6 +77,13 @@ const SaveIcon = ({ size = 20 }: { size?: number }) => (
   </svg>
 );
 
+const LoaderIcon = ({ size = 20 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-spin">
+    <circle cx="12" cy="12" r="10" opacity="0.25" />
+    <path d="M12 2a10 10 0 0 1 10 10" />
+  </svg>
+);
+
 // Color presets
 const colorPresets = [
   { name: 'Indigo', value: '#6366F1' },
@@ -107,106 +118,124 @@ const fontOptions = [
   { id: 'opensans', label: 'Open Sans', style: 'font-family: Open Sans, sans-serif' },
 ];
 
-interface BrandGuide {
-  colors: {
-    primary: string;
-    secondary: string;
-    accent: string;
-    background: string;
-  };
-  typography: {
-    headingFont: string;
-    bodyFont: string;
-  };
-  voice: {
-    tones: string[];
-    keywords: string[];
-    description: string;
-  };
-  audience: {
-    demographics: string;
-    interests: string;
-    painPoints: string;
-  };
-  messaging: {
-    tagline: string;
-    valueProps: string[];
-    doList: string[];
-    dontList: string[];
-  };
+// Local state interface that mirrors the UI structure
+interface LocalBrandGuide {
+  colors: BrandColors;
+  heading_font: string;
+  body_font: string;
+  voice_tones: string[];
+  voice_keywords: string[];
+  voice_description: string | null;
+  audience_demographics: string | null;
+  audience_interests: string | null;
+  audience_pain_points: string | null;
+  tagline: string | null;
+  value_props: string[];
+  do_list: string[];
+  dont_list: string[];
 }
 
+// Default local brand guide
+const defaultLocalGuide: LocalBrandGuide = {
+  colors: { primary: '#6366F1', secondary: '#8B5CF6', accent: '#10B981', background: '#FAFAF9' },
+  heading_font: 'inter',
+  body_font: 'inter',
+  voice_tones: ['professional', 'friendly'],
+  voice_keywords: [],
+  voice_description: null,
+  audience_demographics: null,
+  audience_interests: null,
+  audience_pain_points: null,
+  tagline: null,
+  value_props: [],
+  do_list: [],
+  dont_list: [],
+};
+
 export default function BrandGuidePage() {
+  const { user } = useAuth();
+  const { currentWorkspace } = useWorkspaceContext();
+  const { brandGuide, loading, saving, updateBrandGuide } = useBrandGuide(
+    currentWorkspace?.id,
+    !!user
+  );
+
   const [isEditing, setIsEditing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [activeSection, setActiveSection] = useState<string | null>(null);
-
-  // Brand guide state
-  const [brandGuide, setBrandGuide] = useState<BrandGuide>({
-    colors: {
-      primary: '#6366F1',
-      secondary: '#8B5CF6',
-      accent: '#10B981',
-      background: '#FAFAF9',
-    },
-    typography: {
-      headingFont: 'inter',
-      bodyFont: 'inter',
-    },
-    voice: {
-      tones: ['professional', 'friendly'],
-      keywords: ['innovative', 'reliable', 'efficient', 'modern'],
-      description: 'We communicate with confidence and warmth, making complex topics accessible while maintaining our expertise.',
-    },
-    audience: {
-      demographics: 'Small to medium business owners, marketing managers, and entrepreneurs aged 25-45',
-      interests: 'Social media marketing, brand building, automation, productivity tools',
-      painPoints: 'Limited time for social media, inconsistent posting, difficulty creating engaging content',
-    },
-    messaging: {
-      tagline: 'Your social media, on autopilot.',
-      valueProps: [
-        'Save 10+ hours per week on social media management',
-        'AI-powered content that sounds like you',
-        'Schedule once, post everywhere',
-      ],
-      doList: [
-        'Use action-oriented language',
-        'Include relevant emojis sparingly',
-        'Ask engaging questions',
-        'Share valuable insights',
-      ],
-      dontList: [
-        'Use jargon or buzzwords',
-        'Be overly salesy',
-        'Post without a clear purpose',
-        'Ignore comments or engagement',
-      ],
-    },
-  });
-
-  // Temporary edit state
-  const [editState, setEditState] = useState<BrandGuide>(brandGuide);
+  const [localGuide, setLocalGuide] = useState<LocalBrandGuide>(defaultLocalGuide);
   const [newKeyword, setNewKeyword] = useState('');
   const [newValueProp, setNewValueProp] = useState('');
   const [newDo, setNewDo] = useState('');
   const [newDont, setNewDont] = useState('');
 
+  // Sync local state with fetched data
+  useEffect(() => {
+    if (brandGuide) {
+      setLocalGuide({
+        colors: (brandGuide.colors as unknown as BrandColors) || defaultLocalGuide.colors,
+        heading_font: brandGuide.heading_font || 'inter',
+        body_font: brandGuide.body_font || 'inter',
+        voice_tones: brandGuide.voice_tones || [],
+        voice_keywords: brandGuide.voice_keywords || [],
+        voice_description: brandGuide.voice_description,
+        audience_demographics: brandGuide.audience_demographics,
+        audience_interests: brandGuide.audience_interests,
+        audience_pain_points: brandGuide.audience_pain_points,
+        tagline: brandGuide.tagline,
+        value_props: brandGuide.value_props || [],
+        do_list: brandGuide.do_list || [],
+        dont_list: brandGuide.dont_list || [],
+      });
+    }
+  }, [brandGuide]);
+
   const handleEditStart = () => {
-    setEditState({ ...brandGuide });
     setIsEditing(true);
   };
 
-  const handleSave = () => {
-    setBrandGuide({ ...editState });
-    setIsEditing(false);
-    setActiveSection(null);
+  const handleSave = async () => {
+    try {
+      await updateBrandGuide({
+        colors: localGuide.colors as unknown as Record<string, string>,
+        heading_font: localGuide.heading_font,
+        body_font: localGuide.body_font,
+        voice_tones: localGuide.voice_tones,
+        voice_keywords: localGuide.voice_keywords,
+        voice_description: localGuide.voice_description,
+        audience_demographics: localGuide.audience_demographics,
+        audience_interests: localGuide.audience_interests,
+        audience_pain_points: localGuide.audience_pain_points,
+        tagline: localGuide.tagline,
+        value_props: localGuide.value_props,
+        do_list: localGuide.do_list,
+        dont_list: localGuide.dont_list,
+      });
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Failed to save brand guide:', error);
+    }
   };
 
   const handleCancel = () => {
-    setEditState({ ...brandGuide });
+    // Reset to fetched data
+    if (brandGuide) {
+      setLocalGuide({
+        colors: (brandGuide.colors as unknown as BrandColors) || defaultLocalGuide.colors,
+        heading_font: brandGuide.heading_font || 'inter',
+        body_font: brandGuide.body_font || 'inter',
+        voice_tones: brandGuide.voice_tones || [],
+        voice_keywords: brandGuide.voice_keywords || [],
+        voice_description: brandGuide.voice_description,
+        audience_demographics: brandGuide.audience_demographics,
+        audience_interests: brandGuide.audience_interests,
+        audience_pain_points: brandGuide.audience_pain_points,
+        tagline: brandGuide.tagline,
+        value_props: brandGuide.value_props || [],
+        do_list: brandGuide.do_list || [],
+        dont_list: brandGuide.dont_list || [],
+      });
+    }
     setIsEditing(false);
-    setActiveSection(null);
   };
 
   const handleGenerateVoice = async () => {
@@ -214,122 +243,108 @@ export default function BrandGuidePage() {
     // Simulate AI generation
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    setEditState(prev => ({
+    setLocalGuide(prev => ({
       ...prev,
-      voice: {
-        ...prev.voice,
-        description: 'We speak with the confidence of industry experts while maintaining the approachability of a trusted friend. Our tone is optimistic and forward-thinking, always focusing on solutions rather than problems. We use clear, jargon-free language that empowers our audience to take action.',
-        keywords: ['empowering', 'innovative', 'approachable', 'results-driven', 'authentic'],
-      },
+      voice_description: 'We speak with the confidence of industry experts while maintaining the approachability of a trusted friend. Our tone is optimistic and forward-thinking, always focusing on solutions rather than problems. We use clear, jargon-free language that empowers our audience to take action.',
+      voice_keywords: ['empowering', 'innovative', 'approachable', 'results-driven', 'authentic'],
     }));
     setIsGenerating(false);
   };
 
   const toggleTone = (toneId: string) => {
-    setEditState(prev => ({
+    setLocalGuide(prev => ({
       ...prev,
-      voice: {
-        ...prev.voice,
-        tones: prev.voice.tones.includes(toneId)
-          ? prev.voice.tones.filter(t => t !== toneId)
-          : [...prev.voice.tones, toneId],
-      },
+      voice_tones: prev.voice_tones.includes(toneId)
+        ? prev.voice_tones.filter(t => t !== toneId)
+        : [...prev.voice_tones, toneId],
+    }));
+  };
+
+  const updateColors = (key: keyof BrandColors, value: string) => {
+    setLocalGuide(prev => ({
+      ...prev,
+      colors: { ...prev.colors, [key]: value },
     }));
   };
 
   const addKeyword = () => {
     if (newKeyword.trim()) {
-      setEditState(prev => ({
+      setLocalGuide(prev => ({
         ...prev,
-        voice: {
-          ...prev.voice,
-          keywords: [...prev.voice.keywords, newKeyword.trim()],
-        },
+        voice_keywords: [...prev.voice_keywords, newKeyword.trim()],
       }));
       setNewKeyword('');
     }
   };
 
   const removeKeyword = (keyword: string) => {
-    setEditState(prev => ({
+    setLocalGuide(prev => ({
       ...prev,
-      voice: {
-        ...prev.voice,
-        keywords: prev.voice.keywords.filter(k => k !== keyword),
-      },
+      voice_keywords: prev.voice_keywords.filter(k => k !== keyword),
     }));
   };
 
   const addValueProp = () => {
     if (newValueProp.trim()) {
-      setEditState(prev => ({
+      setLocalGuide(prev => ({
         ...prev,
-        messaging: {
-          ...prev.messaging,
-          valueProps: [...prev.messaging.valueProps, newValueProp.trim()],
-        },
+        value_props: [...prev.value_props, newValueProp.trim()],
       }));
       setNewValueProp('');
     }
   };
 
   const removeValueProp = (prop: string) => {
-    setEditState(prev => ({
+    setLocalGuide(prev => ({
       ...prev,
-      messaging: {
-        ...prev.messaging,
-        valueProps: prev.messaging.valueProps.filter(p => p !== prop),
-      },
+      value_props: prev.value_props.filter(p => p !== prop),
     }));
   };
 
   const addDo = () => {
     if (newDo.trim()) {
-      setEditState(prev => ({
+      setLocalGuide(prev => ({
         ...prev,
-        messaging: {
-          ...prev.messaging,
-          doList: [...prev.messaging.doList, newDo.trim()],
-        },
+        do_list: [...prev.do_list, newDo.trim()],
       }));
       setNewDo('');
     }
   };
 
   const removeDo = (item: string) => {
-    setEditState(prev => ({
+    setLocalGuide(prev => ({
       ...prev,
-      messaging: {
-        ...prev.messaging,
-        doList: prev.messaging.doList.filter(d => d !== item),
-      },
+      do_list: prev.do_list.filter(d => d !== item),
     }));
   };
 
   const addDont = () => {
     if (newDont.trim()) {
-      setEditState(prev => ({
+      setLocalGuide(prev => ({
         ...prev,
-        messaging: {
-          ...prev.messaging,
-          dontList: [...prev.messaging.dontList, newDont.trim()],
-        },
+        dont_list: [...prev.dont_list, newDont.trim()],
       }));
       setNewDont('');
     }
   };
 
   const removeDont = (item: string) => {
-    setEditState(prev => ({
+    setLocalGuide(prev => ({
       ...prev,
-      messaging: {
-        ...prev.messaging,
-        dontList: prev.messaging.dontList.filter(d => d !== item),
-      },
+      dont_list: prev.dont_list.filter(d => d !== item),
     }));
   };
 
-  const currentData = isEditing ? editState : brandGuide;
+  // Loading state
+  if (loading) {
+    return (
+      <div className="brand-guide-page">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="brand-guide-page">
@@ -342,12 +357,21 @@ export default function BrandGuidePage() {
         <div className="brand-guide-actions">
           {isEditing ? (
             <>
-              <button className="btn btn-secondary" onClick={handleCancel}>
+              <button className="btn btn-secondary" onClick={handleCancel} disabled={saving}>
                 Cancel
               </button>
-              <button className="btn btn-primary" onClick={handleSave}>
-                <SaveIcon size={16} />
-                Save Changes
+              <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+                {saving ? (
+                  <>
+                    <LoaderIcon size={16} />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <SaveIcon size={16} />
+                    Save Changes
+                  </>
+                )}
               </button>
             </>
           ) : (
@@ -374,7 +398,7 @@ export default function BrandGuidePage() {
           </div>
           <div className="brand-section-content">
             <div className="color-palette">
-              {Object.entries(currentData.colors).map(([key, value]) => (
+              {Object.entries(localGuide.colors).map(([key, value]) => (
                 <div key={key} className="color-item">
                   <div
                     className="color-preview"
@@ -388,10 +412,7 @@ export default function BrandGuidePage() {
                     <input
                       type="color"
                       value={value}
-                      onChange={(e) => setEditState(prev => ({
-                        ...prev,
-                        colors: { ...prev.colors, [key]: e.target.value },
-                      }))}
+                      onChange={(e) => updateColors(key as keyof BrandColors, e.target.value)}
                       className="color-picker"
                     />
                   )}
@@ -408,10 +429,7 @@ export default function BrandGuidePage() {
                       className="preset-color"
                       style={{ background: preset.value }}
                       title={preset.name}
-                      onClick={() => setEditState(prev => ({
-                        ...prev,
-                        colors: { ...prev.colors, primary: preset.value },
-                      }))}
+                      onClick={() => updateColors('primary', preset.value)}
                     />
                   ))}
                 </div>
@@ -437,10 +455,10 @@ export default function BrandGuidePage() {
                 <label>Heading Font</label>
                 {isEditing ? (
                   <select
-                    value={editState.typography.headingFont}
-                    onChange={(e) => setEditState(prev => ({
+                    value={localGuide.heading_font}
+                    onChange={(e) => setLocalGuide(prev => ({
                       ...prev,
-                      typography: { ...prev.typography, headingFont: e.target.value },
+                      heading_font: e.target.value,
                     }))}
                     className="font-select"
                   >
@@ -450,7 +468,7 @@ export default function BrandGuidePage() {
                   </select>
                 ) : (
                   <div className="font-preview heading">
-                    {fontOptions.find(f => f.id === currentData.typography.headingFont)?.label}
+                    {fontOptions.find(f => f.id === localGuide.heading_font)?.label}
                   </div>
                 )}
                 <p className="font-sample" style={{ fontWeight: 600, fontSize: '24px' }}>
@@ -461,10 +479,10 @@ export default function BrandGuidePage() {
                 <label>Body Font</label>
                 {isEditing ? (
                   <select
-                    value={editState.typography.bodyFont}
-                    onChange={(e) => setEditState(prev => ({
+                    value={localGuide.body_font}
+                    onChange={(e) => setLocalGuide(prev => ({
                       ...prev,
-                      typography: { ...prev.typography, bodyFont: e.target.value },
+                      body_font: e.target.value,
                     }))}
                     className="font-select"
                   >
@@ -474,7 +492,7 @@ export default function BrandGuidePage() {
                   </select>
                 ) : (
                   <div className="font-preview body">
-                    {fontOptions.find(f => f.id === currentData.typography.bodyFont)?.label}
+                    {fontOptions.find(f => f.id === localGuide.body_font)?.label}
                   </div>
                 )}
                 <p className="font-sample">
@@ -512,7 +530,7 @@ export default function BrandGuidePage() {
               <label>Brand Tones</label>
               <div className="tone-grid">
                 {voiceTones.map(tone => {
-                  const isSelected = currentData.voice.tones.includes(tone.id);
+                  const isSelected = localGuide.voice_tones.includes(tone.id);
                   return (
                     <div
                       key={tone.id}
@@ -534,7 +552,7 @@ export default function BrandGuidePage() {
             <div className="voice-keywords">
               <label>Brand Keywords</label>
               <div className="keywords-list">
-                {currentData.voice.keywords.map(keyword => (
+                {localGuide.voice_keywords.map(keyword => (
                   <span key={keyword} className="keyword-tag">
                     {keyword}
                     {isEditing && (
@@ -566,16 +584,16 @@ export default function BrandGuidePage() {
               <label>Voice Description</label>
               {isEditing ? (
                 <textarea
-                  value={editState.voice.description}
-                  onChange={(e) => setEditState(prev => ({
+                  value={localGuide.voice_description || ''}
+                  onChange={(e) => setLocalGuide(prev => ({
                     ...prev,
-                    voice: { ...prev.voice, description: e.target.value },
+                    voice_description: e.target.value || null,
                   }))}
                   rows={4}
                   placeholder="Describe how your brand communicates..."
                 />
               ) : (
-                <p className="voice-text">{currentData.voice.description}</p>
+                <p className="voice-text">{localGuide.voice_description || 'No voice description set'}</p>
               )}
             </div>
           </div>
@@ -598,45 +616,45 @@ export default function BrandGuidePage() {
                 <label>Demographics</label>
                 {isEditing ? (
                   <textarea
-                    value={editState.audience.demographics}
-                    onChange={(e) => setEditState(prev => ({
+                    value={localGuide.audience_demographics || ''}
+                    onChange={(e) => setLocalGuide(prev => ({
                       ...prev,
-                      audience: { ...prev.audience, demographics: e.target.value },
+                      audience_demographics: e.target.value || null,
                     }))}
                     rows={2}
                   />
                 ) : (
-                  <p>{currentData.audience.demographics}</p>
+                  <p>{localGuide.audience_demographics || 'No demographics set'}</p>
                 )}
               </div>
               <div className="audience-item">
                 <label>Interests</label>
                 {isEditing ? (
                   <textarea
-                    value={editState.audience.interests}
-                    onChange={(e) => setEditState(prev => ({
+                    value={localGuide.audience_interests || ''}
+                    onChange={(e) => setLocalGuide(prev => ({
                       ...prev,
-                      audience: { ...prev.audience, interests: e.target.value },
+                      audience_interests: e.target.value || null,
                     }))}
                     rows={2}
                   />
                 ) : (
-                  <p>{currentData.audience.interests}</p>
+                  <p>{localGuide.audience_interests || 'No interests set'}</p>
                 )}
               </div>
               <div className="audience-item">
                 <label>Pain Points</label>
                 {isEditing ? (
                   <textarea
-                    value={editState.audience.painPoints}
-                    onChange={(e) => setEditState(prev => ({
+                    value={localGuide.audience_pain_points || ''}
+                    onChange={(e) => setLocalGuide(prev => ({
                       ...prev,
-                      audience: { ...prev.audience, painPoints: e.target.value },
+                      audience_pain_points: e.target.value || null,
                     }))}
                     rows={2}
                   />
                 ) : (
-                  <p>{currentData.audience.painPoints}</p>
+                  <p>{localGuide.audience_pain_points || 'No pain points set'}</p>
                 )}
               </div>
             </div>
@@ -661,15 +679,18 @@ export default function BrandGuidePage() {
               {isEditing ? (
                 <input
                   type="text"
-                  value={editState.messaging.tagline}
-                  onChange={(e) => setEditState(prev => ({
+                  value={localGuide.tagline || ''}
+                  onChange={(e) => setLocalGuide(prev => ({
                     ...prev,
-                    messaging: { ...prev.messaging, tagline: e.target.value },
+                    tagline: e.target.value || null,
                   }))}
                   className="tagline-input"
+                  placeholder="Enter your tagline..."
                 />
               ) : (
-                <p className="tagline-text">"{currentData.messaging.tagline}"</p>
+                <p className="tagline-text">
+                  {localGuide.tagline ? `"${localGuide.tagline}"` : 'No tagline set'}
+                </p>
               )}
             </div>
 
@@ -677,7 +698,7 @@ export default function BrandGuidePage() {
             <div className="messaging-value-props">
               <label>Value Propositions</label>
               <ul className="value-props-list">
-                {currentData.messaging.valueProps.map((prop, i) => (
+                {localGuide.value_props.map((prop, i) => (
                   <li key={i} className="value-prop-item">
                     <span>{prop}</span>
                     {isEditing && (
@@ -712,7 +733,7 @@ export default function BrandGuidePage() {
                   Do's
                 </label>
                 <ul>
-                  {currentData.messaging.doList.map((item, i) => (
+                  {localGuide.do_list.map((item, i) => (
                     <li key={i}>
                       <span>{item}</span>
                       {isEditing && (
@@ -744,7 +765,7 @@ export default function BrandGuidePage() {
                   Don'ts
                 </label>
                 <ul>
-                  {currentData.messaging.dontList.map((item, i) => (
+                  {localGuide.dont_list.map((item, i) => (
                     <li key={i}>
                       <span>{item}</span>
                       {isEditing && (

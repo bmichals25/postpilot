@@ -1,5 +1,8 @@
 'use client';
 
+import React from 'react';
+import { useWorkspaceContext } from '@/contexts/WorkspaceContext';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import {
   TwitterIcon,
   LinkedInIcon,
@@ -15,138 +18,6 @@ import {
   ChevronDownIcon
 } from '@/components/icons';
 
-// Mock data for analytics
-const overviewStats = {
-  totalFollowers: 12847,
-  followerGrowth: 3.2,
-  totalEngagement: 4521,
-  engagementGrowth: 12.4,
-  engagementRate: 4.8,
-  rateGrowth: 0.3,
-  postsPublished: 24,
-  postsChange: -2,
-};
-
-const platformStats = {
-  twitter: {
-    name: 'Twitter',
-    handle: '@acmeinc',
-    followers: 5234,
-    growth: 2.1,
-    impressions: 45600,
-    likes: 1234,
-    retweets: 456,
-    replies: 189,
-  },
-  linkedin: {
-    name: 'LinkedIn',
-    handle: 'ACME Inc.',
-    followers: 3128,
-    growth: 4.5,
-    impressions: 28400,
-    likes: 890,
-    comments: 234,
-    shares: 156,
-  },
-  instagram: {
-    name: 'Instagram',
-    handle: '@acme.inc',
-    followers: 4485,
-    growth: 3.8,
-    impressions: 62300,
-    likes: 2397,
-    comments: 312,
-    saves: 567,
-  },
-};
-
-const topPosts = [
-  {
-    id: '1',
-    platform: 'twitter',
-    content: "🚀 Building in public update: Just shipped our new analytics dashboard! Can't wait to hear what you think. Thread below 👇",
-    likes: 342,
-    comments: 45,
-    shares: 89,
-    impressions: 12400,
-  },
-  {
-    id: '2',
-    platform: 'instagram',
-    content: "Behind the scenes at ACME HQ ✨ Sneak peek at what we're working on next. The team is crushing it!",
-    likes: 567,
-    comments: 89,
-    shares: 123,
-    impressions: 18200,
-  },
-  {
-    id: '3',
-    platform: 'linkedin',
-    content: "We're hiring! Looking for passionate developers to join our growing team. Remote-friendly, great benefits, and an amazing culture.",
-    likes: 234,
-    comments: 67,
-    shares: 45,
-    impressions: 9800,
-  },
-  {
-    id: '4',
-    platform: 'twitter',
-    content: "Hot take: The best marketing strategy is building a great product. Everything else is just noise. Agree or disagree?",
-    likes: 289,
-    comments: 78,
-    shares: 56,
-    impressions: 11200,
-  },
-  {
-    id: '5',
-    platform: 'instagram',
-    content: "Product launch day! 🎉 After months of hard work, we're finally ready to show you what we've been building.",
-    likes: 445,
-    comments: 56,
-    shares: 98,
-    impressions: 15600,
-  },
-];
-
-const engagementByDay = [
-  { day: 'Mon', twitter: 234, linkedin: 156, instagram: 312 },
-  { day: 'Tue', twitter: 312, linkedin: 189, instagram: 456 },
-  { day: 'Wed', twitter: 278, linkedin: 167, instagram: 389 },
-  { day: 'Thu', twitter: 456, linkedin: 234, instagram: 523 },
-  { day: 'Fri', twitter: 389, linkedin: 198, instagram: 467 },
-  { day: 'Sat', twitter: 234, linkedin: 145, instagram: 378 },
-  { day: 'Sun', twitter: 189, linkedin: 123, instagram: 289 },
-];
-
-// Generate posting times heatmap data
-const generatePostingTimes = () => {
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const times = ['6 AM', '9 AM', '12 PM', '3 PM', '6 PM', '9 PM'];
-  const levels = ['low', 'medium', 'high', 'best'];
-
-  const data: { time: string; days: { day: string; level: string }[] }[] = [];
-
-  times.forEach(time => {
-    const row = {
-      time,
-      days: days.map(day => ({
-        day,
-        level: levels[Math.floor(Math.random() * 4)],
-      })),
-    };
-    data.push(row);
-  });
-
-  // Set some specific "best" times
-  data[2].days[1].level = 'best'; // 12 PM Tuesday
-  data[2].days[3].level = 'best'; // 12 PM Thursday
-  data[3].days[2].level = 'best'; // 3 PM Wednesday
-
-  return data;
-};
-
-const postingTimes = generatePostingTimes();
-
 function formatNumber(num: number): string {
   if (num >= 1000) {
     return (num / 1000).toFixed(1) + 'K';
@@ -155,9 +26,58 @@ function formatNumber(num: number): string {
 }
 
 export default function AnalyticsPage() {
+  const { currentWorkspace } = useWorkspaceContext();
+  const {
+    overviewStats,
+    platformStats,
+    engagementByDay,
+    topPosts,
+    postingTimes,
+    loading
+  } = useAnalytics(currentWorkspace?.id);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Loading analytics...</p>
+      </div>
+    );
+  }
+
+  // No workspace selected
+  if (!currentWorkspace) {
+    return (
+      <div className="empty-state">
+        <h2>No Workspace Selected</h2>
+        <p>Please select a workspace to view analytics.</p>
+      </div>
+    );
+  }
+
+  // No data available
+  if (!overviewStats) {
+    return (
+      <div className="empty-state">
+        <h2>No Analytics Data</h2>
+        <p>Start posting to see your analytics here.</p>
+      </div>
+    );
+  }
+
   const maxEngagement = Math.max(
     ...engagementByDay.flatMap(d => [d.twitter, d.linkedin, d.instagram])
   );
+
+  // Helper to get platform stats by platform name
+  const getPlatformStat = (platform: 'twitter' | 'linkedin' | 'instagram') => {
+    return platformStats.find(p => p.platform === platform);
+  };
+
+  const twitterStats = getPlatformStat('twitter');
+  const linkedinStats = getPlatformStat('linkedin');
+  const instagramStats = getPlatformStat('instagram');
 
   return (
     <div>
@@ -214,9 +134,9 @@ export default function AnalyticsPage() {
           </div>
           <div className="stat-value">{overviewStats.engagementRate}%</div>
           <div className="stat-label">Engagement Rate</div>
-          <div className={`trend-indicator ${overviewStats.rateGrowth >= 0 ? 'up' : 'down'}`}>
-            {overviewStats.rateGrowth >= 0 ? <TrendUpIcon size={14} /> : <TrendDownIcon size={14} />}
-            {Math.abs(overviewStats.rateGrowth)}%
+          <div className={`trend-indicator ${overviewStats.engagementRateChange >= 0 ? 'up' : 'down'}`}>
+            {overviewStats.engagementRateChange >= 0 ? <TrendUpIcon size={14} /> : <TrendDownIcon size={14} />}
+            {Math.abs(overviewStats.engagementRateChange)}%
           </div>
         </div>
 
@@ -238,166 +158,172 @@ export default function AnalyticsPage() {
       {/* Platform Performance */}
       <div className="platform-performance-grid">
         {/* Twitter */}
-        <div className="platform-perf-card">
-          <div className="platform-perf-header">
-            <div className="platform-perf-logo twitter">
-              <TwitterIcon size={24} />
+        {twitterStats && (
+          <div className="platform-perf-card">
+            <div className="platform-perf-header">
+              <div className="platform-perf-logo twitter">
+                <TwitterIcon size={24} />
+              </div>
+              <div className="platform-perf-info">
+                <h3>Twitter</h3>
+                <div className="platform-perf-followers">
+                  <span>{formatNumber(twitterStats.followers)} followers</span>
+                  <span className="follower-growth">+{twitterStats.growth}%</span>
+                </div>
+              </div>
             </div>
-            <div className="platform-perf-info">
-              <h3>{platformStats.twitter.name}</h3>
-              <div className="platform-perf-followers">
-                <span>{formatNumber(platformStats.twitter.followers)} followers</span>
-                <span className="follower-growth">+{platformStats.twitter.growth}%</span>
+            <div className="platform-metrics">
+              <div className="platform-metric">
+                <div className="platform-metric-icon">
+                  <HeartIcon size={16} />
+                </div>
+                <div>
+                  <div className="platform-metric-value">{formatNumber(twitterStats.likes)}</div>
+                  <div className="platform-metric-label">Likes</div>
+                </div>
+              </div>
+              <div className="platform-metric">
+                <div className="platform-metric-icon">
+                  <ShareIcon size={16} />
+                </div>
+                <div>
+                  <div className="platform-metric-value">{twitterStats.shares}</div>
+                  <div className="platform-metric-label">Retweets</div>
+                </div>
+              </div>
+              <div className="platform-metric">
+                <div className="platform-metric-icon">
+                  <CommentIcon size={16} />
+                </div>
+                <div>
+                  <div className="platform-metric-value">{twitterStats.comments}</div>
+                  <div className="platform-metric-label">Replies</div>
+                </div>
+              </div>
+              <div className="platform-metric">
+                <div className="platform-metric-icon">
+                  <EyeIcon size={16} />
+                </div>
+                <div>
+                  <div className="platform-metric-value">{formatNumber(twitterStats.impressions)}</div>
+                  <div className="platform-metric-label">Impressions</div>
+                </div>
               </div>
             </div>
           </div>
-          <div className="platform-metrics">
-            <div className="platform-metric">
-              <div className="platform-metric-icon">
-                <HeartIcon size={16} />
-              </div>
-              <div>
-                <div className="platform-metric-value">{formatNumber(platformStats.twitter.likes)}</div>
-                <div className="platform-metric-label">Likes</div>
-              </div>
-            </div>
-            <div className="platform-metric">
-              <div className="platform-metric-icon">
-                <ShareIcon size={16} />
-              </div>
-              <div>
-                <div className="platform-metric-value">{platformStats.twitter.retweets}</div>
-                <div className="platform-metric-label">Retweets</div>
-              </div>
-            </div>
-            <div className="platform-metric">
-              <div className="platform-metric-icon">
-                <CommentIcon size={16} />
-              </div>
-              <div>
-                <div className="platform-metric-value">{platformStats.twitter.replies}</div>
-                <div className="platform-metric-label">Replies</div>
-              </div>
-            </div>
-            <div className="platform-metric">
-              <div className="platform-metric-icon">
-                <EyeIcon size={16} />
-              </div>
-              <div>
-                <div className="platform-metric-value">{formatNumber(platformStats.twitter.impressions)}</div>
-                <div className="platform-metric-label">Impressions</div>
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* LinkedIn */}
-        <div className="platform-perf-card">
-          <div className="platform-perf-header">
-            <div className="platform-perf-logo linkedin">
-              <LinkedInIcon size={24} />
+        {linkedinStats && (
+          <div className="platform-perf-card">
+            <div className="platform-perf-header">
+              <div className="platform-perf-logo linkedin">
+                <LinkedInIcon size={24} />
+              </div>
+              <div className="platform-perf-info">
+                <h3>LinkedIn</h3>
+                <div className="platform-perf-followers">
+                  <span>{formatNumber(linkedinStats.followers)} followers</span>
+                  <span className="follower-growth">+{linkedinStats.growth}%</span>
+                </div>
+              </div>
             </div>
-            <div className="platform-perf-info">
-              <h3>{platformStats.linkedin.name}</h3>
-              <div className="platform-perf-followers">
-                <span>{formatNumber(platformStats.linkedin.followers)} followers</span>
-                <span className="follower-growth">+{platformStats.linkedin.growth}%</span>
+            <div className="platform-metrics">
+              <div className="platform-metric">
+                <div className="platform-metric-icon">
+                  <HeartIcon size={16} />
+                </div>
+                <div>
+                  <div className="platform-metric-value">{linkedinStats.likes}</div>
+                  <div className="platform-metric-label">Likes</div>
+                </div>
+              </div>
+              <div className="platform-metric">
+                <div className="platform-metric-icon">
+                  <ShareIcon size={16} />
+                </div>
+                <div>
+                  <div className="platform-metric-value">{linkedinStats.shares}</div>
+                  <div className="platform-metric-label">Shares</div>
+                </div>
+              </div>
+              <div className="platform-metric">
+                <div className="platform-metric-icon">
+                  <CommentIcon size={16} />
+                </div>
+                <div>
+                  <div className="platform-metric-value">{linkedinStats.comments}</div>
+                  <div className="platform-metric-label">Comments</div>
+                </div>
+              </div>
+              <div className="platform-metric">
+                <div className="platform-metric-icon">
+                  <EyeIcon size={16} />
+                </div>
+                <div>
+                  <div className="platform-metric-value">{formatNumber(linkedinStats.impressions)}</div>
+                  <div className="platform-metric-label">Impressions</div>
+                </div>
               </div>
             </div>
           </div>
-          <div className="platform-metrics">
-            <div className="platform-metric">
-              <div className="platform-metric-icon">
-                <HeartIcon size={16} />
-              </div>
-              <div>
-                <div className="platform-metric-value">{platformStats.linkedin.likes}</div>
-                <div className="platform-metric-label">Likes</div>
-              </div>
-            </div>
-            <div className="platform-metric">
-              <div className="platform-metric-icon">
-                <ShareIcon size={16} />
-              </div>
-              <div>
-                <div className="platform-metric-value">{platformStats.linkedin.shares}</div>
-                <div className="platform-metric-label">Shares</div>
-              </div>
-            </div>
-            <div className="platform-metric">
-              <div className="platform-metric-icon">
-                <CommentIcon size={16} />
-              </div>
-              <div>
-                <div className="platform-metric-value">{platformStats.linkedin.comments}</div>
-                <div className="platform-metric-label">Comments</div>
-              </div>
-            </div>
-            <div className="platform-metric">
-              <div className="platform-metric-icon">
-                <EyeIcon size={16} />
-              </div>
-              <div>
-                <div className="platform-metric-value">{formatNumber(platformStats.linkedin.impressions)}</div>
-                <div className="platform-metric-label">Impressions</div>
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* Instagram */}
-        <div className="platform-perf-card">
-          <div className="platform-perf-header">
-            <div className="platform-perf-logo instagram">
-              <InstagramIcon size={24} />
+        {instagramStats && (
+          <div className="platform-perf-card">
+            <div className="platform-perf-header">
+              <div className="platform-perf-logo instagram">
+                <InstagramIcon size={24} />
+              </div>
+              <div className="platform-perf-info">
+                <h3>Instagram</h3>
+                <div className="platform-perf-followers">
+                  <span>{formatNumber(instagramStats.followers)} followers</span>
+                  <span className="follower-growth">+{instagramStats.growth}%</span>
+                </div>
+              </div>
             </div>
-            <div className="platform-perf-info">
-              <h3>{platformStats.instagram.name}</h3>
-              <div className="platform-perf-followers">
-                <span>{formatNumber(platformStats.instagram.followers)} followers</span>
-                <span className="follower-growth">+{platformStats.instagram.growth}%</span>
+            <div className="platform-metrics">
+              <div className="platform-metric">
+                <div className="platform-metric-icon">
+                  <HeartIcon size={16} />
+                </div>
+                <div>
+                  <div className="platform-metric-value">{formatNumber(instagramStats.likes)}</div>
+                  <div className="platform-metric-label">Likes</div>
+                </div>
+              </div>
+              <div className="platform-metric">
+                <div className="platform-metric-icon">
+                  <ShareIcon size={16} />
+                </div>
+                <div>
+                  <div className="platform-metric-value">{instagramStats.shares}</div>
+                  <div className="platform-metric-label">Saves</div>
+                </div>
+              </div>
+              <div className="platform-metric">
+                <div className="platform-metric-icon">
+                  <CommentIcon size={16} />
+                </div>
+                <div>
+                  <div className="platform-metric-value">{instagramStats.comments}</div>
+                  <div className="platform-metric-label">Comments</div>
+                </div>
+              </div>
+              <div className="platform-metric">
+                <div className="platform-metric-icon">
+                  <EyeIcon size={16} />
+                </div>
+                <div>
+                  <div className="platform-metric-value">{formatNumber(instagramStats.impressions)}</div>
+                  <div className="platform-metric-label">Impressions</div>
+                </div>
               </div>
             </div>
           </div>
-          <div className="platform-metrics">
-            <div className="platform-metric">
-              <div className="platform-metric-icon">
-                <HeartIcon size={16} />
-              </div>
-              <div>
-                <div className="platform-metric-value">{formatNumber(platformStats.instagram.likes)}</div>
-                <div className="platform-metric-label">Likes</div>
-              </div>
-            </div>
-            <div className="platform-metric">
-              <div className="platform-metric-icon">
-                <ShareIcon size={16} />
-              </div>
-              <div>
-                <div className="platform-metric-value">{platformStats.instagram.saves}</div>
-                <div className="platform-metric-label">Saves</div>
-              </div>
-            </div>
-            <div className="platform-metric">
-              <div className="platform-metric-icon">
-                <CommentIcon size={16} />
-              </div>
-              <div>
-                <div className="platform-metric-value">{platformStats.instagram.comments}</div>
-                <div className="platform-metric-label">Comments</div>
-              </div>
-            </div>
-            <div className="platform-metric">
-              <div className="platform-metric-icon">
-                <EyeIcon size={16} />
-              </div>
-              <div>
-                <div className="platform-metric-value">{formatNumber(platformStats.instagram.impressions)}</div>
-                <div className="platform-metric-label">Impressions</div>
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Engagement Chart */}
@@ -491,44 +417,19 @@ export default function AnalyticsPage() {
           <h2>Best Times to Post</h2>
           <p>Based on your audience engagement patterns</p>
         </div>
-        <div className="posting-times-grid">
-          {/* Header row */}
-          <div className="time-slot-header"></div>
-          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-            <div key={day} className="time-slot-header">{day}</div>
-          ))}
-
-          {/* Time rows */}
-          {postingTimes.map((row) => (
-            <>
-              <div key={`label-${row.time}`} className="time-slot-label">{row.time}</div>
-              {row.days.map((slot, i) => (
+        <div className="posting-times-chart">
+          {postingTimes.map((time) => (
+            <div key={time.hour} className="posting-time-bar">
+              <div className="posting-time-label">{time.hour}</div>
+              <div className="posting-time-bar-container">
                 <div
-                  key={`${row.time}-${slot.day}-${i}`}
-                  className={`time-slot ${slot.level}`}
-                  title={`${slot.day} ${row.time}: ${slot.level} engagement`}
+                  className="posting-time-bar-fill"
+                  style={{ width: `${time.engagement}%` }}
                 />
-              ))}
-            </>
+              </div>
+              <div className="posting-time-value">{time.engagement}%</div>
+            </div>
           ))}
-        </div>
-        <div className="posting-times-legend">
-          <div className="legend-level">
-            <div className="time-slot low"></div>
-            Low
-          </div>
-          <div className="legend-level">
-            <div className="time-slot medium"></div>
-            Medium
-          </div>
-          <div className="legend-level">
-            <div className="time-slot high"></div>
-            High
-          </div>
-          <div className="legend-level">
-            <div className="time-slot best"></div>
-            Best
-          </div>
         </div>
       </div>
     </div>

@@ -1,39 +1,51 @@
 'use client';
 
 import { useState } from 'react';
-import { TwitterIcon, LinkedInIcon, InstagramIcon, PlusIcon } from '@/components/icons';
+import { useWorkspaceContext } from '@/contexts/WorkspaceContext';
+import { TwitterIcon, LinkedInIcon, InstagramIcon } from '@/components/icons';
 
 interface AddBusinessModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onComplete: (business: BusinessData) => void;
-}
-
-interface BusinessData {
-  name: string;
-  website: string;
-  logo?: string;
-  primaryColor: string;
-  type: string;
 }
 
 interface BrandData {
   name: string;
-  logo?: string;
-  colors?: string[];
   domain: string;
+  description: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    background: string;
+  };
+  logos: {
+    primary: string | null;
+    dark: string | null;
+    icon: string | null;
+  };
+  fonts: {
+    heading: string;
+    body: string;
+  };
+  links: {
+    twitter?: string;
+    linkedin?: string;
+    instagram?: string;
+    website?: string;
+  };
 }
 
-// Predefined color options
+// Predefined color options (fallback when no brand colors)
 const colorOptions = [
-  { name: 'Indigo', value: '#6366F1' },
-  { name: 'Emerald', value: '#10B981' },
-  { name: 'Amber', value: '#F59E0B' },
-  { name: 'Rose', value: '#F43F5E' },
-  { name: 'Blue', value: '#3B82F6' },
-  { name: 'Purple', value: '#8B5CF6' },
-  { name: 'Cyan', value: '#06B6D4' },
-  { name: 'Orange', value: '#F97316' },
+  { name: 'Indigo', value: '#6366F1', gradient: 'from-indigo-500 to-purple-500' },
+  { name: 'Emerald', value: '#10B981', gradient: 'from-emerald-500 to-emerald-600' },
+  { name: 'Amber', value: '#F59E0B', gradient: 'from-amber-500 to-orange-500' },
+  { name: 'Rose', value: '#F43F5E', gradient: 'from-rose-500 to-pink-500' },
+  { name: 'Blue', value: '#3B82F6', gradient: 'from-blue-500 to-blue-600' },
+  { name: 'Purple', value: '#8B5CF6', gradient: 'from-indigo-500 to-purple-500' },
+  { name: 'Cyan', value: '#06B6D4', gradient: 'from-cyan-500 to-teal-500' },
+  { name: 'Orange', value: '#F97316', gradient: 'from-amber-500 to-orange-500' },
 ];
 
 const businessTypes = [
@@ -43,6 +55,37 @@ const businessTypes = [
   { value: 'agency', label: 'Agency' },
   { value: 'creator', label: 'Creator' },
 ];
+
+// Find closest matching gradient for a hex color
+function findClosestGradient(hex: string): string {
+  const hexToRgb = (h: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(h);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16),
+    } : { r: 0, g: 0, b: 0 };
+  };
+
+  const targetRgb = hexToRgb(hex);
+  let closestOption = colorOptions[0];
+  let minDistance = Infinity;
+
+  for (const option of colorOptions) {
+    const optionRgb = hexToRgb(option.value);
+    const distance = Math.sqrt(
+      Math.pow(targetRgb.r - optionRgb.r, 2) +
+      Math.pow(targetRgb.g - optionRgb.g, 2) +
+      Math.pow(targetRgb.b - optionRgb.b, 2)
+    );
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestOption = option;
+    }
+  }
+
+  return closestOption.gradient;
+}
 
 // Globe icon for website input
 const GlobeIcon = ({ size = 20 }: { size?: number }) => (
@@ -77,17 +120,20 @@ const CloseIcon = ({ size = 20 }: { size?: number }) => (
   </svg>
 );
 
-export default function AddBusinessModal({ isOpen, onClose, onComplete }: AddBusinessModalProps) {
+export default function AddBusinessModal({ isOpen, onClose }: AddBusinessModalProps) {
+  const { createWorkspace } = useWorkspaceContext();
   const [step, setStep] = useState<'brand' | 'connect'>('brand');
   const [mode, setMode] = useState<'auto' | 'manual'>('auto');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [brandData, setBrandData] = useState<BrandData | null>(null);
   const [error, setError] = useState('');
 
   // Manual entry fields
   const [businessName, setBusinessName] = useState('');
   const [selectedColor, setSelectedColor] = useState(colorOptions[0].value);
+  const [selectedGradient, setSelectedGradient] = useState(colorOptions[0].gradient);
   const [businessType, setBusinessType] = useState('business');
 
   // Connected accounts
@@ -107,33 +153,40 @@ export default function AddBusinessModal({ isOpen, onClose, onComplete }: AddBus
     setError('');
 
     try {
-      // Clean the URL
-      let domain = websiteUrl.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+      // Clean the URL for display
+      const domain = websiteUrl.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
 
-      // For demo, simulate Brandfetch API response
-      // In production, this would call: https://api.brandfetch.io/v2/brands/${domain}
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Call the real Brandfetch API endpoint
+      const response = await fetch('/api/brandfetch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ domain }),
+      });
 
-      // Simulated response based on domain
-      const mockBrands: Record<string, BrandData> = {
-        'apple.com': { name: 'Apple', logo: '🍎', colors: ['#000000', '#555555'], domain: 'apple.com' },
-        'google.com': { name: 'Google', logo: '🔍', colors: ['#4285F4', '#34A853', '#FBBC05', '#EA4335'], domain: 'google.com' },
-        'stripe.com': { name: 'Stripe', logo: '💳', colors: ['#635BFF', '#00D4FF'], domain: 'stripe.com' },
-        'default': { name: domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1), colors: ['#6366F1'], domain },
-      };
+      if (!response.ok) {
+        if (response.status === 404) {
+          setError('Brand not found. Try entering details manually.');
+          setMode('manual');
+          // Still set the business name from domain
+          setBusinessName(domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1));
+          return;
+        }
+        throw new Error('Failed to fetch brand data');
+      }
 
-      const data = mockBrands[domain] || {
-        ...mockBrands['default'],
-        name: domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1),
-        domain
-      };
-
+      const data: BrandData = await response.json();
       setBrandData(data);
       setBusinessName(data.name);
-      if (data.colors && data.colors[0]) {
-        setSelectedColor(data.colors[0]);
+
+      // Set primary color and find closest gradient
+      if (data.colors?.primary) {
+        setSelectedColor(data.colors.primary);
+        setSelectedGradient(findClosestGradient(data.colors.primary));
       }
-    } catch {
+    } catch (err) {
+      console.error('Error fetching brand:', err);
       setError('Could not fetch brand data. Please enter details manually.');
       setMode('manual');
     } finally {
@@ -150,15 +203,44 @@ export default function AddBusinessModal({ isOpen, onClose, onComplete }: AddBus
     }));
   };
 
-  const handleComplete = () => {
-    const business: BusinessData = {
-      name: businessName,
-      website: websiteUrl || '',
-      logo: brandData?.logo,
-      primaryColor: selectedColor,
-      type: businessType,
-    };
-    onComplete(business);
+  const handleComplete = async () => {
+    if (!businessName.trim()) {
+      setError('Please enter a business name');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      // Get domain from URL or brand data
+      const domain = brandData?.domain || websiteUrl.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0] || undefined;
+
+      // Create the workspace using context
+      await createWorkspace(businessName, businessType, selectedGradient, domain);
+
+      // Close modal and reset state
+      resetAndClose();
+    } catch (err) {
+      console.error('Error creating workspace:', err);
+      setError('Failed to create workspace. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const resetAndClose = () => {
+    // Reset all state
+    setStep('brand');
+    setMode('auto');
+    setWebsiteUrl('');
+    setBrandData(null);
+    setBusinessName('');
+    setSelectedColor(colorOptions[0].value);
+    setSelectedGradient(colorOptions[0].gradient);
+    setBusinessType('business');
+    setConnectedAccounts({ twitter: false, linkedin: false, instagram: false });
+    setError('');
     onClose();
   };
 
@@ -168,7 +250,7 @@ export default function AddBusinessModal({ isOpen, onClose, onComplete }: AddBus
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={resetAndClose}>
       <div className="modal-container modal-lg" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="modal-header">
@@ -182,7 +264,7 @@ export default function AddBusinessModal({ isOpen, onClose, onComplete }: AddBus
                 : 'Connect your social media accounts'}
             </p>
           </div>
-          <button className="modal-close-btn" onClick={onClose}>
+          <button className="modal-close-btn" onClick={resetAndClose}>
             <CloseIcon size={20} />
           </button>
         </div>
@@ -256,7 +338,15 @@ export default function AddBusinessModal({ isOpen, onClose, onComplete }: AddBus
                         className="brand-preview-logo"
                         style={{ background: selectedColor }}
                       >
-                        {brandData.logo || brandData.name.charAt(0)}
+                        {brandData.logos?.icon || brandData.logos?.primary ? (
+                          <img
+                            src={brandData.logos.icon || brandData.logos.primary || ''}
+                            alt={brandData.name}
+                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                          />
+                        ) : (
+                          brandData.name.charAt(0)
+                        )}
                       </div>
                       <div className="brand-preview-info">
                         <input
@@ -269,14 +359,19 @@ export default function AddBusinessModal({ isOpen, onClose, onComplete }: AddBus
                       </div>
                       {brandData.colors && (
                         <div className="brand-colors">
-                          {brandData.colors.map((color, i) => (
-                            <button
-                              key={i}
-                              className={`color-swatch ${selectedColor === color ? 'selected' : ''}`}
-                              style={{ background: color }}
-                              onClick={() => setSelectedColor(color)}
-                            />
-                          ))}
+                          {[brandData.colors.primary, brandData.colors.secondary, brandData.colors.accent]
+                            .filter(Boolean)
+                            .map((color, i) => (
+                              <button
+                                key={i}
+                                className={`color-swatch ${selectedColor === color ? 'selected' : ''}`}
+                                style={{ background: color }}
+                                onClick={() => {
+                                  setSelectedColor(color);
+                                  setSelectedGradient(findClosestGradient(color));
+                                }}
+                              />
+                            ))}
                         </div>
                       )}
                     </div>
@@ -319,7 +414,10 @@ export default function AddBusinessModal({ isOpen, onClose, onComplete }: AddBus
                           key={color.value}
                           className={`color-option ${selectedColor === color.value ? 'selected' : ''}`}
                           style={{ background: color.value }}
-                          onClick={() => setSelectedColor(color.value)}
+                          onClick={() => {
+                            setSelectedColor(color.value);
+                            setSelectedGradient(color.gradient);
+                          }}
                           title={color.name}
                         />
                       ))}
@@ -400,7 +498,7 @@ export default function AddBusinessModal({ isOpen, onClose, onComplete }: AddBus
               </div>
 
               <p className="connect-hint">
-                You can connect more accounts later from Settings → Connections
+                You can connect more accounts later from Settings - Connections
               </p>
             </>
           )}
@@ -408,9 +506,10 @@ export default function AddBusinessModal({ isOpen, onClose, onComplete }: AddBus
 
         {/* Footer */}
         <div className="modal-footer">
+          {error && step === 'connect' && <p className="form-error">{error}</p>}
           {step === 'brand' ? (
             <>
-              <button className="btn btn-secondary" onClick={onClose}>
+              <button className="btn btn-secondary" onClick={resetAndClose}>
                 Cancel
               </button>
               <button
@@ -429,8 +528,9 @@ export default function AddBusinessModal({ isOpen, onClose, onComplete }: AddBus
               <button
                 className="btn btn-primary"
                 onClick={handleComplete}
+                disabled={isSubmitting}
               >
-                {hasConnectedAccount ? 'Complete Setup' : 'Skip & Finish'}
+                {isSubmitting ? 'Creating...' : hasConnectedAccount ? 'Complete Setup' : 'Skip & Finish'}
               </button>
             </>
           )}

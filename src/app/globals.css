@@ -3098,6 +3098,22 @@ body {
     justify-content: center;
 }
 
+/* Sidebar nav item hover (inline styles can't do :hover) */
+.sidebar-nav-item:hover:not(.sidebar-nav-item--active) {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #F8F8FF !important;
+}
+
+.sidebar-logout-btn:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #F8F8FF !important;
+}
+
+.sidebar-collapse-handle:hover {
+    background: #1E1E2E !important;
+    color: #F8F8FF !important;
+}
+
 /* ==========================================
    MAIN CONTENT - Adjusted for new layout
    ========================================== */

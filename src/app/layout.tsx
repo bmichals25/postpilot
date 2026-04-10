@@ -1,21 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
 import "./globals.css";
-import Sidebar from "@/components/layout/Sidebar";
-import WorkspaceBanner from "@/components/layout/WorkspaceBanner";
 import Analytics from "@/components/Analytics";
-import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-sans",
-});
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#6366F1",
+  themeColor: "#7C3AED",
 };
 
 export const metadata: Metadata = {
@@ -60,18 +52,8 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.variable} antialiased`}>
-        <WorkspaceProvider>
-          <div className="app-layout">
-            <WorkspaceBanner />
-            <div className="app-body">
-              <Sidebar />
-              <main className="main-content">
-                {children}
-              </main>
-            </div>
-          </div>
-        </WorkspaceProvider>
+      <body className={`${GeistSans.variable} antialiased`}>
+        {children}
         <Analytics />
       </body>
     </html>

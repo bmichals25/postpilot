@@ -1,330 +1,370 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useWorkspaceContext } from '@/contexts/WorkspaceContext';
-import {
-  TwitterIcon,
-  LinkedInIcon,
-  InstagramIcon,
-  CheckIcon,
-  SaveIcon,
-  TrashIcon,
-  PlusIcon,
-  XIcon,
-} from '@/components/icons';
+import React, { useState } from 'react';
 
-const workspaceTypes = [
-  { value: 'personal', label: 'Personal' },
-  { value: 'business', label: 'Business' },
-  { value: 'agency', label: 'Agency' },
-  { value: 'startup', label: 'Startup' },
-];
-
-const themeColors = [
-  { value: 'from-indigo-500 to-purple-500', label: 'Purple', hex: '#6366F1' },
-  { value: 'from-emerald-500 to-emerald-600', label: 'Emerald', hex: '#10B981' },
-  { value: 'from-amber-500 to-orange-500', label: 'Orange', hex: '#F59E0B' },
-  { value: 'from-blue-500 to-blue-600', label: 'Blue', hex: '#3B82F6' },
-  { value: 'from-rose-500 to-pink-500', label: 'Rose', hex: '#F43F5E' },
-  { value: 'from-cyan-500 to-teal-500', label: 'Teal', hex: '#06B6D4' },
-];
-
-const toneOptions = ['professional', 'friendly', 'casual', 'authoritative', 'playful'];
-const lengthOptions = [
-  { value: 280, label: 'Short (280 chars - Twitter)' },
+const WORKSPACE_TYPES = ['Personal', 'Business', 'Agency', 'Startup'];
+const TONE_OPTIONS = ['Professional', 'Friendly', 'Casual', 'Authoritative', 'Playful'];
+const LENGTH_OPTIONS = [
+  { value: 280, label: 'Short (280 chars — Twitter)' },
   { value: 500, label: 'Medium (500 chars)' },
   { value: 1000, label: 'Long (1000 chars)' },
   { value: 2000, label: 'Very Long (2000 chars)' },
 ];
-const emojiOptions = ['never', 'sometimes', 'always'];
+const EMOJI_OPTIONS = ['Never', 'Sometimes', 'Always'];
+const ACCENT_COLORS = [
+  { label: 'Violet', hex: '#7C3AED' },
+  { label: 'Blue', hex: '#3B82F6' },
+  { label: 'Emerald', hex: '#10B981' },
+  { label: 'Amber', hex: '#F59E0B' },
+  { label: 'Rose', hex: '#F43F5E' },
+  { label: 'Cyan', hex: '#06B6D4' },
+];
 
 export default function SettingsPage() {
-  const { currentWorkspace, updateWorkspace, deleteWorkspace, connections } = useWorkspaceContext();
+  const [name, setName] = useState('TechCorp');
+  const [type, setType] = useState('Business');
+  const [accentColor, setAccentColor] = useState('#7C3AED');
+  const [defaultPlatforms, setDefaultPlatforms] = useState(['twitter', 'linkedin']);
+  const [autoSchedule, setAutoSchedule] = useState(false);
+  const [hashtags, setHashtags] = useState(['#startup', '#techcorp']);
+  const [newHashtag, setNewHashtag] = useState('');
+  const [tone, setTone] = useState('Professional');
+  const [maxLength, setMaxLength] = useState(280);
+  const [emojis, setEmojis] = useState('Sometimes');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Local state for editing
-  const [name, setName] = useState('');
-  const [type, setType] = useState('personal');
-  const [color, setColor] = useState('from-indigo-500 to-purple-500');
-  const [settings, setSettings] = useState({
-    default_platforms: [] as string[],
-    default_hashtags: [] as string[],
-    auto_schedule: false,
-    ai_tone: 'professional',
-    ai_max_length: 280,
-    ai_emojis: 'sometimes' as 'never' | 'sometimes' | 'always',
-  });
-  const [newHashtag, setNewHashtag] = useState('');
-
-  // Sync from workspace
-  useEffect(() => {
-    if (currentWorkspace) {
-      setName(currentWorkspace.name);
-      setType(currentWorkspace.type);
-      setColor(currentWorkspace.color);
-      const ws = currentWorkspace.settings as typeof settings;
-      if (ws) {
-        setSettings({
-          default_platforms: ws.default_platforms || [],
-          default_hashtags: ws.default_hashtags || [],
-          auto_schedule: ws.auto_schedule || false,
-          ai_tone: ws.ai_tone || 'professional',
-          ai_max_length: ws.ai_max_length || 280,
-          ai_emojis: ws.ai_emojis || 'sometimes',
-        });
-      }
-    }
-  }, [currentWorkspace]);
-
   const handleSave = async () => {
-    if (!currentWorkspace) return;
     setSaving(true);
-    try {
-      await updateWorkspace(currentWorkspace.id, {
-        name,
-        type,
-        color,
-        settings,
-      });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch (error) {
-      console.error('Failed to save settings:', error);
-    } finally {
-      setSaving(false);
-    }
+    await new Promise(r => setTimeout(r, 800));
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
   };
 
-  const handleDelete = async () => {
-    if (!currentWorkspace) return;
-    try {
-      await deleteWorkspace(currentWorkspace.id);
-    } catch (error) {
-      console.error('Failed to delete workspace:', error);
-    }
-  };
-
-  const togglePlatform = (platform: string) => {
-    setSettings(prev => ({
-      ...prev,
-      default_platforms: prev.default_platforms.includes(platform)
-        ? prev.default_platforms.filter(p => p !== platform)
-        : [...prev.default_platforms, platform],
-    }));
-  };
+  const togglePlatform = (p: string) =>
+    setDefaultPlatforms(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
 
   const addHashtag = () => {
-    if (!newHashtag.trim()) return;
-    const tag = newHashtag.startsWith('#') ? newHashtag : `#${newHashtag}`;
-    if (!settings.default_hashtags.includes(tag)) {
-      setSettings(prev => ({
-        ...prev,
-        default_hashtags: [...prev.default_hashtags, tag],
-      }));
-    }
+    const tag = newHashtag.trim();
+    if (!tag) return;
+    const formatted = tag.startsWith('#') ? tag : `#${tag}`;
+    if (!hashtags.includes(formatted)) setHashtags(prev => [...prev, formatted]);
     setNewHashtag('');
   };
 
-  const removeHashtag = (tag: string) => {
-    setSettings(prev => ({
-      ...prev,
-      default_hashtags: prev.default_hashtags.filter(t => t !== tag),
-    }));
+  const removeHashtag = (tag: string) => setHashtags(prev => prev.filter(t => t !== tag));
+
+  const sectionStyle: React.CSSProperties = {
+    background: 'var(--bg-card)',
+    border: '1px solid var(--bg-border)',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 16,
   };
 
-  if (!currentWorkspace) {
-    return <div className="settings-loading">Loading...</div>;
-  }
+  const sectionHeaderStyle: React.CSSProperties = {
+    padding: '14px 20px',
+    borderBottom: '1px solid var(--bg-border)',
+    fontSize: 14,
+    fontWeight: 600,
+    color: 'var(--text-primary)',
+  };
+
+  const rowStyle: React.CSSProperties = {
+    padding: '14px 20px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottom: '1px solid var(--bg-border-subtle)',
+  };
+
+  const labelStyle: React.CSSProperties = {
+    fontSize: 13.5,
+    color: 'var(--text-primary)',
+    fontWeight: 500,
+    minWidth: 180,
+  };
 
   return (
-    <div className="settings-page">
-      <header className="page-header">
+    <div className="main-content" style={{ maxWidth: 720 }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
         <div>
-          <h1>Workspace Settings</h1>
-          <p>Configure settings for "{currentWorkspace.name}"</p>
+          <h1 className="page-title">Workspace Settings</h1>
+          <p className="page-subtitle">Configure settings for "{name}"</p>
         </div>
         <button
-          className={`btn-primary ${saved ? 'btn-success' : ''}`}
+          className="btn-primary"
           onClick={handleSave}
           disabled={saving}
+          style={{
+            background: saved ? '#059669' : undefined,
+            opacity: saving ? 0.8 : 1,
+          }}
         >
-          {saved ? <CheckIcon size={18} /> : <SaveIcon size={18} />}
-          {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
+          {saving ? (
+            <>
+              <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid white', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
+              Saving...
+            </>
+          ) : saved ? (
+            <>✓ Saved!</>
+          ) : (
+            <>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
+              Save Changes
+            </>
+          )}
         </button>
-      </header>
+      </div>
 
-      {/* General Settings */}
-      <section className="settings-section">
-        <h2>General</h2>
-        <div className="settings-grid">
-          <div className="settings-field">
-            <label>Workspace Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="My Workspace"
-            />
-          </div>
-          <div className="settings-field">
-            <label>Workspace Type</label>
-            <select value={type} onChange={(e) => setType(e.target.value)}>
-              {workspaceTypes.map(t => (
-                <option key={t.value} value={t.value}>{t.label}</option>
-              ))}
-            </select>
-          </div>
-          <div className="settings-field">
-            <label>Theme Color</label>
-            <div className="color-picker">
-              {themeColors.map(c => (
-                <button
-                  key={c.value}
-                  className={`color-option ${color === c.value ? 'selected' : ''}`}
-                  style={{ background: c.hex }}
-                  onClick={() => setColor(c.value)}
-                  title={c.label}
-                />
-              ))}
-            </div>
+      {/* General */}
+      <div style={sectionStyle}>
+        <div style={sectionHeaderStyle}>General</div>
+        {/* Name */}
+        <div style={rowStyle}>
+          <span style={labelStyle}>Workspace Name</span>
+          <input
+            className="input"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            style={{ width: 240 }}
+          />
+        </div>
+        {/* Type */}
+        <div style={rowStyle}>
+          <span style={labelStyle}>Workspace Type</span>
+          <select
+            className="input"
+            value={type}
+            onChange={e => setType(e.target.value)}
+            style={{ width: 240 }}
+          >
+            {WORKSPACE_TYPES.map(t => <option key={t}>{t}</option>)}
+          </select>
+        </div>
+        {/* Accent color */}
+        <div style={{ ...rowStyle, borderBottom: 'none' }}>
+          <span style={labelStyle}>Accent Color</span>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {ACCENT_COLORS.map(c => (
+              <button
+                key={c.hex}
+                onClick={() => setAccentColor(c.hex)}
+                title={c.label}
+                style={{
+                  width: 26, height: 26, borderRadius: '50%',
+                  background: c.hex, border: 'none', cursor: 'pointer',
+                  outline: accentColor === c.hex ? `2px solid ${c.hex}` : '2px solid transparent',
+                  outlineOffset: 2,
+                  boxShadow: accentColor === c.hex ? `0 0 0 1px ${c.hex}40` : 'none',
+                  transition: 'outline 0.15s',
+                }}
+              />
+            ))}
           </div>
         </div>
-      </section>
+      </div>
 
       {/* Posting Defaults */}
-      <section className="settings-section">
-        <h2>Posting Defaults</h2>
-        <div className="settings-grid">
-          <div className="settings-field full-width">
-            <label>Default Platforms</label>
-            <div className="platform-toggles">
-              {['twitter', 'linkedin', 'instagram'].map(platform => {
-                const isConnected = connections.some(c => c.platform === platform);
-                const isSelected = settings.default_platforms.includes(platform);
-                return (
-                  <button
-                    key={platform}
-                    className={`platform-toggle ${isSelected ? 'selected' : ''} ${!isConnected ? 'disabled' : ''}`}
-                    onClick={() => isConnected && togglePlatform(platform)}
-                    disabled={!isConnected}
-                  >
-                    {platform === 'twitter' && <TwitterIcon size={18} />}
-                    {platform === 'linkedin' && <LinkedInIcon size={18} />}
-                    {platform === 'instagram' && <InstagramIcon size={18} />}
-                    <span>{platform.charAt(0).toUpperCase() + platform.slice(1)}</span>
-                    {isSelected && <CheckIcon size={14} />}
-                    {!isConnected && <span className="not-connected">Not connected</span>}
-                  </button>
-                );
-              })}
-            </div>
+      <div style={sectionStyle}>
+        <div style={sectionHeaderStyle}>Posting Defaults</div>
+        {/* Default platforms */}
+        <div style={rowStyle}>
+          <div>
+            <div style={labelStyle}>Default Platforms</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>Platforms pre-selected when composing</div>
           </div>
-          <div className="settings-field full-width">
-            <label>Default Hashtags</label>
-            <div className="hashtag-list">
-              {settings.default_hashtags.map(tag => (
-                <span key={tag} className="hashtag-tag">
+          <div style={{ display: 'flex', gap: 8 }}>
+            {[
+              { id: 'twitter', label: 'Twitter' },
+              { id: 'linkedin', label: 'LinkedIn' },
+              { id: 'instagram', label: 'Instagram' },
+            ].map(p => {
+              const selected = defaultPlatforms.includes(p.id);
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => togglePlatform(p.id)}
+                  style={{
+                    padding: '5px 12px', borderRadius: 7, fontSize: 12.5, fontWeight: 500,
+                    border: '1px solid', cursor: 'pointer', fontFamily: 'inherit',
+                    background: selected ? 'rgba(124,58,237,0.12)' : 'transparent',
+                    borderColor: selected ? 'rgba(124,58,237,0.35)' : 'var(--bg-border)',
+                    color: selected ? '#A78BFA' : 'var(--text-muted)',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {selected && '✓ '}{p.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        {/* Default hashtags */}
+        <div style={{ ...rowStyle, alignItems: 'flex-start' }}>
+          <div>
+            <div style={labelStyle}>Default Hashtags</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>Added to every new post</div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+              {hashtags.map(tag => (
+                <span
+                  key={tag}
+                  className="tag tag-violet"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}
+                >
                   {tag}
-                  <button onClick={() => removeHashtag(tag)}><XIcon size={12} /></button>
+                  <button
+                    onClick={() => removeHashtag(tag)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'inherit', lineHeight: 1, fontSize: 11 }}
+                  >×</button>
                 </span>
               ))}
-              <div className="hashtag-input">
-                <input
-                  type="text"
-                  value={newHashtag}
-                  onChange={(e) => setNewHashtag(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && addHashtag()}
-                  placeholder="Add hashtag..."
-                />
-                <button onClick={addHashtag}><PlusIcon size={14} /></button>
-              </div>
             </div>
-          </div>
-          <div className="settings-field">
-            <label>Auto-schedule Posts</label>
-            <label className="toggle">
+            <div style={{ display: 'flex', gap: 6 }}>
               <input
-                type="checkbox"
-                checked={settings.auto_schedule}
-                onChange={(e) => setSettings(prev => ({ ...prev, auto_schedule: e.target.checked }))}
+                className="input"
+                value={newHashtag}
+                onChange={e => setNewHashtag(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addHashtag()}
+                placeholder="#hashtag"
+                style={{ width: 120, padding: '5px 10px', fontSize: 12 }}
               />
-              <span className="toggle-slider" />
-              <span className="toggle-label">{settings.auto_schedule ? 'On' : 'Off'}</span>
-            </label>
-          </div>
-        </div>
-      </section>
-
-      {/* AI Generation Settings */}
-      <section className="settings-section">
-        <h2>AI Generation</h2>
-        <div className="settings-grid">
-          <div className="settings-field">
-            <label>Preferred Tone</label>
-            <select
-              value={settings.ai_tone}
-              onChange={(e) => setSettings(prev => ({ ...prev, ai_tone: e.target.value }))}
-            >
-              {toneOptions.map(t => (
-                <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
-              ))}
-            </select>
-          </div>
-          <div className="settings-field">
-            <label>Max Post Length</label>
-            <select
-              value={settings.ai_max_length}
-              onChange={(e) => setSettings(prev => ({ ...prev, ai_max_length: parseInt(e.target.value) }))}
-            >
-              {lengthOptions.map(l => (
-                <option key={l.value} value={l.value}>{l.label}</option>
-              ))}
-            </select>
-          </div>
-          <div className="settings-field full-width">
-            <label>Include Emojis</label>
-            <div className="radio-group">
-              {emojiOptions.map(opt => (
-                <label key={opt} className="radio-option">
-                  <input
-                    type="radio"
-                    name="emojis"
-                    value={opt}
-                    checked={settings.ai_emojis === opt}
-                    onChange={() => setSettings(prev => ({ ...prev, ai_emojis: opt as typeof settings.ai_emojis }))}
-                  />
-                  <span>{opt.charAt(0).toUpperCase() + opt.slice(1)}</span>
-                </label>
-              ))}
+              <button className="btn-secondary" onClick={addHashtag} style={{ padding: '5px 10px', fontSize: 12 }}>Add</button>
             </div>
           </div>
         </div>
-      </section>
+        {/* Auto schedule */}
+        <div style={{ ...rowStyle, borderBottom: 'none' }}>
+          <div>
+            <div style={labelStyle}>Auto-Schedule Posts</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>Automatically pick optimal posting times</div>
+          </div>
+          <button
+            onClick={() => setAutoSchedule(!autoSchedule)}
+            className={`toggle ${autoSchedule ? 'on' : ''}`}
+          />
+        </div>
+      </div>
+
+      {/* AI Generation */}
+      <div style={sectionStyle}>
+        <div style={sectionHeaderStyle}>AI Generation</div>
+        {/* Tone */}
+        <div style={rowStyle}>
+          <span style={labelStyle}>Preferred Tone</span>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {TONE_OPTIONS.map(t => (
+              <button
+                key={t}
+                onClick={() => setTone(t)}
+                style={{
+                  padding: '4px 10px', borderRadius: 7, fontSize: 12, fontWeight: 500,
+                  border: '1px solid', cursor: 'pointer', fontFamily: 'inherit',
+                  background: tone === t ? 'rgba(124,58,237,0.12)' : 'transparent',
+                  borderColor: tone === t ? 'rgba(124,58,237,0.35)' : 'var(--bg-border)',
+                  color: tone === t ? '#A78BFA' : 'var(--text-muted)',
+                  transition: 'all 0.15s',
+                }}
+              >{t}</button>
+            ))}
+          </div>
+        </div>
+        {/* Max length */}
+        <div style={rowStyle}>
+          <div>
+            <div style={labelStyle}>Max Post Length</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>AI won&apos;t exceed this length</div>
+          </div>
+          <select
+            className="input"
+            value={maxLength}
+            onChange={e => setMaxLength(Number(e.target.value))}
+            style={{ width: 260 }}
+          >
+            {LENGTH_OPTIONS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+          </select>
+        </div>
+        {/* Emojis */}
+        <div style={{ ...rowStyle, borderBottom: 'none' }}>
+          <span style={labelStyle}>Include Emojis</span>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {EMOJI_OPTIONS.map(o => (
+              <button
+                key={o}
+                onClick={() => setEmojis(o)}
+                style={{
+                  padding: '4px 12px', borderRadius: 7, fontSize: 12, fontWeight: 500,
+                  border: '1px solid', cursor: 'pointer', fontFamily: 'inherit',
+                  background: emojis === o ? 'rgba(124,58,237,0.12)' : 'transparent',
+                  borderColor: emojis === o ? 'rgba(124,58,237,0.35)' : 'var(--bg-border)',
+                  color: emojis === o ? '#A78BFA' : 'var(--text-muted)',
+                  transition: 'all 0.15s',
+                }}
+              >{o}</button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* Danger Zone */}
-      <section className="settings-section danger">
-        <h2>Danger Zone</h2>
-        <div className="danger-content">
+      <div style={{ ...sectionStyle, borderColor: 'rgba(248,113,113,0.2)' }}>
+        <div style={{ ...sectionHeaderStyle, color: '#F87171', borderBottomColor: 'rgba(248,113,113,0.15)' }}>Danger Zone</div>
+        <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
           <div>
-            <h3>Delete Workspace</h3>
-            <p>Permanently delete this workspace and all its data. This action cannot be undone.</p>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>Delete Workspace</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+              Permanently delete this workspace and all its data. This action cannot be undone.
+            </div>
           </div>
           {showDeleteConfirm ? (
-            <div className="delete-confirm">
-              <span>Are you sure?</span>
-              <button className="btn-danger" onClick={handleDelete}>Yes, Delete</button>
-              <button className="btn-secondary" onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+              <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Are you sure?</span>
+              <button
+                style={{
+                  padding: '6px 12px', borderRadius: 7, fontSize: 13, fontWeight: 600,
+                  background: '#EF4444', border: 'none', color: 'white', cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                Yes, Delete
+              </button>
+              <button
+                className="btn-secondary"
+                onClick={() => setShowDeleteConfirm(false)}
+                style={{ padding: '6px 12px', fontSize: 13 }}
+              >
+                Cancel
+              </button>
             </div>
           ) : (
-            <button className="btn-danger-outline" onClick={() => setShowDeleteConfirm(true)}>
-              <TrashIcon size={16} />
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '7px 14px', borderRadius: 7, fontSize: 13, fontWeight: 500,
+                background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)',
+                color: '#F87171', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
               Delete Workspace
             </button>
           )}
         </div>
-      </section>
+      </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

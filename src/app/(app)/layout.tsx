@@ -1,6 +1,8 @@
 import Sidebar from "@/components/layout/Sidebar";
 import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
 
+export const dynamic = 'force-dynamic';
+
 export default function AppLayout({
   children,
 }: {
